@@ -7,5 +7,9 @@
     "restartPolicyMaxRetries": 10,
     "startCommand": "gunicorn app:app --bind 0.0.0.0:$PORT",
     "numWorkers": 1
-  }
+  },
+  "environmentVariables": [
+    {"key": "GROQ_API_KEY", "value": ""},
+    {"key": "QWEN_API_KEY", "value": ""}
+  ]
 }

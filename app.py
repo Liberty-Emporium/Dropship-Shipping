@@ -242,11 +242,113 @@ def calculate_shipping():
         'currency': 'USD'
     })
 
+# ============== AI CEO API ==============
+
+@app.route('/api/ceo/think', methods=['POST'])
+def ceo_think():
+    """Ask the AI CEO to think about something"""
+    from ai_ceo import ceo
+    
+    data = request.json
+    prompt = data.get('prompt', '')
+    
+    if not prompt:
+        return jsonify({'error': 'No prompt provided'}), 400
+    
+    result = ceo.think(prompt)
+    
+    return jsonify({
+        'response': result,
+        'ceo': ceo.name,
+        'time': datetime.now().isoformat()
+    })
+
+@app.route('/api/ceo/decide', methods=['POST'])
+def ceo_decide():
+    """Ask AI CEO to make a decision"""
+    from ai_ceo import ceo
+    
+    data = request.json
+    situation = data.get('situation', '')
+    
+    if not situation:
+        return jsonify({'error': 'No situation provided'}), 400
+    
+    result = ceo.decide(situation)
+    
+    # Check if it wants to BUILD something
+    build_request = None
+    if 'BUILD:' in result:
+        build_request = result.split('BUILD:')[1].strip()
+    
+    return jsonify({
+        'decision': result,
+        'build_request': build_request,
+        'ceo': ceo.name,
+        'time': datetime.now().isoformat()
+    })
+
+@app.route('/api/ceo/analyze', methods=['GET'])
+def ceo_analyze():
+    """Get AI CEO analysis of business"""
+    from ai_ceo import ceo
+    
+    orders = load_orders()
+    products = load_products()
+    
+    analysis = ceo.analyze_performance(orders, products)
+    
+    return jsonify({
+        'analysis': analysis,
+        'stats': {
+            'total_orders': len(orders),
+            'total_products': len(products),
+            'pending': len([o for o in orders if o.get('status') == 'pending']),
+            'shipped': len([o for o in orders if o.get('status') == 'shipped']),
+            'delivered': len([o for o in orders if o.get('status') == 'delivered']),
+            'revenue': sum(float(o.get('total', 0)) for o in orders)
+        },
+        'ceo': ceo.name
+    })
+
+@app.route('/api/ceo/marketing', methods=['GET'])
+def ceo_marketing():
+    """Get marketing plan from AI CEO"""
+    from ai_ceo import ceo
+    
+    plan = ceo.create_marketing_plan()
+    
+    return jsonify({
+        'plan': plan,
+        'ceo': ceo.name
+    })
+
+@app.route('/api/business/status', methods=['GET'])
+def business_status():
+    """Get overall business status"""
+    orders = load_orders()
+    products = load_products()
+    suppliers = load_suppliers()
+    
+    return jsonify({
+        'orders': len(orders),
+        'products': len(products),
+        'suppliers': len(suppliers),
+        'revenue': sum(float(o.get('total', 0)) for o in orders),
+        'pending_shipping': len([o for o in orders if o.get('status') == 'pending']),
+        'recent_orders': orders[-5:] if orders else []
+    })
+
 # ============== STATIC PAGES ==============
 
 @app.route('/about')
 def about():
     return render_template('about.html')
+
+@app.route('/ceo')
+def ceo_dashboard():
+    """AI CEO Dashboard"""
+    return render_template('ceo_dashboard.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}AI CEO Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-robot"></i> AI CEO Dashboard</h2>
+    <span class="badge bg-success">AI Online</span>
+</div>
+
+<!-- AI CEO Status -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-cpu"></i> Meet Your AI CEO</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Your AI CEO is ready to run your dropshipping business!</p>
+                <p>It can analyze your business, create marketing plans, and make decisions.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="bi bi-graph-up" style="font-size: 2rem; color: #0d6efd;"></i>
+                <h5 class="mt-3">Analyze Business</h5>
+                <p class="text-muted small">Get AI insights on your performance</p>
+                <button onclick="analyzeBusiness()" class="btn btn-primary">Analyze</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="bi bi-megaphone" style="font-size: 2rem; color: #198754;"></i>
+                <h5 class="mt-3">Marketing Plan</h5>
+                <p class="text-muted small">Get a 7-day marketing strategy</p>
+                <button onclick="getMarketingPlan()" class="btn btn-success">Get Plan</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="bi bi-question-circle" style="font-size: 2rem; color: #fd7e14;"></i>
+                <h5 class="mt-3">Ask Decision</h5>
+                <p class="text-muted small">Ask AI to make a business decision</p>
+                <button onclick="askDecision()" class="btn btn-warning">Ask</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="bi bi-diagram-3" style="font-size: 2rem; color: #6f42c1;"></i>
+                <h5 class="mt-3">API Docs</h5>
+                <p class="text-muted small">Programmatic access</p>
+                <a href="#api-docs" class="btn btn-secondary">View Docs</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Response Area -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">AI CEO Response</h5>
+    </div>
+    <div class="card-body">
+        <div id="ai-response" class="p-3 bg-light rounded" style="min-height: 100px;">
+            <p class="text-muted">Ask the AI CEO something to see its response here...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Business Stats -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Current Stats</h5>
+            </div>
+            <div class="card-body" id="business-stats">
+                <p class="text-muted">Loading...</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Recent Orders</h5>
+            </div>
+            <div class="card-body" id="recent-orders">
+                <p class="text-muted">Loading...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API Documentation -->
+<div class="card" id="api-docs">
+    <div class="card-header">
+        <h5 class="mb-0">API Documentation</h5>
+    </div>
+    <div class="card-body">
+        <h6>Endpoints for AI integration:</h6>
+        <code>POST /api/ceo/think</code> - Ask AI to think<br>
+        <code>POST /api/ceo/decide</code> - Get AI decision<br>
+        <code>GET /api/ceo/analyze</code> - Business analysis<br>
+        <code>GET /api/ceo/marketing</code> - Marketing plan<br>
+        <code>GET /api/business/status</code> - Business status<br>
+    </div>
+</div>
+
+<script>
+// Load stats on page load
+fetch('/api/business/status').then(r => r.json()).then(data => {
+    document.getElementById('business-stats').innerHTML = `
+        <ul class="list-group">
+            <li class="list-group-item d-flex justify-content-between">Orders <span class="badge bg-primary">${data.orders}</span></li>
+            <li class="list-group-item d-flex justify-content-between">Products <span class="badge bg-success">${data.products}</span></li>
+            <li class="list-group-item d-flex justify-content-between">Suppliers <span class="badge bg-info">${data.suppliers}</span></li>
+            <li class="list-group-item d-flex justify-content-between">Revenue <span class="badge bg-warning">$${data.revenue.toFixed(2)}</span></li>
+        </ul>
+    `;
+    document.getElementById('recent-orders').innerHTML = data.recent_orders.length ? 
+        data.recent_orders.map(o => `<p class="mb-1">${o.id} - ${o.customer_name} - $${o.total}</p>`).join('') :
+        '<p class="text-muted">No orders yet</p>';
+});
+
+function analyzeBusiness() {
+    document.getElementById('ai-response').innerHTML = '<p>Analyzing...</p>';
+    fetch('/api/ceo/analyze').then(r => r.json()).then(data => {
+        document.getElementById('ai-response').innerHTML = `<pre>${data.analysis}</pre>`;
+    });
+}
+
+function getMarketingPlan() {
+    document.getElementById('ai-response').innerHTML = '<p>Creating marketing plan...</p>';
+    fetch('/api/ceo/marketing').then(r => r.json()).then(data => {
+        document.getElementById('ai-response').innerHTML = `<pre>${data.plan}</pre>`;
+    });
+}
+
+function askDecision() {
+    const situation = prompt("What decision do you need?");
+    if (!situation) return;
+    document.getElementById('ai-response').innerHTML = '<p>Thinking...</p>';
+    fetch('/api/ceo/decide', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({situation})
+    }).then(r => r.json()).then(data => {
+        let html = `<pre>${data.decision}</pre>`;
+        if (data.build_request) {
+            html += `<div class="alert alert-info mt-2">AI wants to build: ${data.build_request}</div>`;
+        }
+        document.getElementById('ai-response').innerHTML = html;
+    });
+}
+</script>
+{% endblock %}

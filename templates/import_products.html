@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Import Products{% endblock %}
+
+{% block content %}
+<h2><i class="bi bi-upload"></i> Import Products</h2>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5>Upload CSV</h5>
+        <p class="text-muted">CSV format: name, sku, cost, price, supplier</p>
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <input type="file" name="file" accept=".csv" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Import</button>
+            <a href="/products" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Example CSV</h5>
+    </div>
+    <div class="card-body">
+        <pre>name,sku,cost,price,supplier
+Wireless Mouse,WMS-001,15.00,39.99,Amazon
+Bluetooth Speaker,BSP-002,25.00,59.99,Alibaba
+USB Cable,USB-003,5.00,19.99,AliExpress</pre>
+    </div>
+</div>
+{% endblock %}

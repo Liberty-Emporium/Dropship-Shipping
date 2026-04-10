@@ -42,6 +42,12 @@
                     <a href="/shipping" class="{% if request.path == '/shipping' %}active{% endif %}">
                         <i class="bi bi-truck"></i> Shipping
                     </a>
+                    <a href="/analytics" class="{% if request.path == '/analytics' %}active{% endif %}">
+                        <i class="bi bi-graph-up"></i> Analytics
+                    </a>
+                    <a href="/settings/pricing" class="{% if '/settings' in request.path %}active{% endif %}">
+                        <i class="bi bi-gear"></i> Pricing
+                    </a>
                     <a href="/ceo" class="{% if request.path == '/ceo' %}active{% endif %}">
                         <i class="bi bi-robot"></i> AI CEO
                     </a>

@@ -11,7 +11,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+DATA_DIR = os.environ.get('DATA_DIR', os.path.join('/data'))
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # ============== DATA FUNCTIONS ==============

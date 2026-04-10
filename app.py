@@ -1,5 +1,5 @@
 """
-Dropshipping Shipping App
+Andyping Shipping App
 Track orders and manage shipping for dropshipping business
 """
 

@@ -566,7 +566,7 @@ def auto_create_customer():
 
 # ============== AUTO FULFILLMENT ==============
 
-import smtplib
+# import smtplib  # Disabled temporarily
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -859,11 +859,11 @@ def signup():
 
 # ============== STRIPE PAYMENTS ($59/month) ==============
 
-import stripe
+# import stripe  # Temporarily disabled - need keys first
 
 # Get from environment or set test key (for now)
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_placeholder')
-stripe.api_key = STRIPE_SECRET_KEY
+# stripe.api_key = STRIPE_SECRET_KEY
 
 PRICE_ID = os.environ.get('STRIPE_PRICE_ID', 'price_placeholder')  # $59/month price ID
 

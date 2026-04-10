@@ -84,11 +84,29 @@
         
         <div class="d-grid gap-2">
             {% if order.status == 'pending' %}
-                <a href="/order/{{ order.id }}/ship" class="btn btn-success">Ship Order</a>
+                <a href="/order/{{ order.id }}/ship" class="btn btn-success">Ship Manually</a>
+                <button onclick="autoFulfill('{{ order.id }}')" class="btn btn-primary">🚀 Auto Fulfill</button>
             {% elif order.status == 'shipped' %}
                 <a href="/order/{{ order.id }}/delivered" class="btn btn-primary">Mark Delivered</a>
             {% endif %}
         </div>
     </div>
 </div>
+
+<script>
+function autoFulfill(orderId) {
+    if (!confirm('Auto-fulfill this order? This will email the supplier and send tracking to customer.')) return;
+    
+    fetch('/api/fulfill-auto/' + orderId, {method: 'POST'})
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Order auto-fulfilled!\n\nTracking: ' + data.tracking_number + '\nCarrier: ' + data.carrier);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+</script>
 {% endblock %}

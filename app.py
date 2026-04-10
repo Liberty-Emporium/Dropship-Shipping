@@ -563,3 +563,141 @@ def auto_create_customer():
     
     save_customers(customers)
     return jsonify({'success': True, 'customer_count': len(customers)})
+
+# ============== AUTO FULFILLMENT ==============
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+# Email settings (stored in config)
+def load_email_settings():
+    path = os.path.join(DATA_DIR, 'email_settings.json')
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    return {'enabled': False}
+
+def save_email_settings(settings):
+    with open(os.path.join(DATA_DIR, 'email_settings.json'), 'w') as f:
+        json.dump(settings, f, indent=2)
+
+def send_email(to_email, subject, body, smtp_settings):
+    """Send email notification"""
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = smtp_settings.get('from_email')
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'html'))
+        
+        server = smtplib.SMTP(smtp_settings.get('smtp_host'), int(smtp_settings.get('smtp_port', 587)))
+        server.starttls()
+        server.login(smtp_settings.get('username'), smtp_settings.get('password'))
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Email error: {e}")
+        return False
+
+@app.route('/settings/email', methods=['GET', 'POST'])
+def email_settings_page():
+    """Email configuration page"""
+    settings = load_email_settings()
+    
+    if request.method == 'POST':
+        settings = {
+            'enabled': 'enabled' in request.form,
+            'smtp_host': request.form.get('smtp_host', ''),
+            'smtp_port': request.form.get('smtp_port', '587'),
+            'username': request.form.get('username', ''),
+            'password': request.form.get('password', ''),
+            'from_email': request.form.get('from_email', ''),
+        }
+        save_email_settings(settings)
+        flash('Email settings saved!', 'success')
+        return redirect(url_for('email_settings_page'))
+    
+    return render_template('email_settings.html', settings=settings)
+
+@app.route('/api/fulfill-auto/<order_id>', methods=['POST'])
+def auto_fulfill_order(order_id):
+    """Automatically fulfill an order"""
+    orders = load_orders()
+    order = next((o for o in orders if o.get('id') == order_id), None)
+    
+    if not order:
+        return jsonify({'success': False, 'error': 'Order not found'}), 404
+    
+    suppliers = load_suppliers()
+    supplier = next((s for s in suppliers if s.get('name') == order.get('supplier', '')), None)
+    
+    email_settings = load_email_settings()
+    
+    # Step 1: Send order to supplier
+    if supplier and email_settings.get('enabled'):
+        supplier_email_body = f"""
+        <h2>New Order to Fulfill</h2>
+        <p><strong>Order ID:</strong> {order['id']}</p>
+        <p><strong>Product:</strong> {order['product_name']}</p>
+        <p><strong>Quantity:</strong> {order['quantity']}</p>
+        <p><strong>Shipping Address:</strong><br>
+        {order['customer_name']}<br>
+        {order['customer_address']}<br>
+        {order['customer_city']}, {order['customer_state']} {order['customer_zip']}</p>
+        <p><strong>Customer Email:</strong> {order['customer_email']}</p>
+        """
+        send_email(supplier.get('email', ''), f'New Order {order["id"]} - Please Fulfill', supplier_email_body, email_settings)
+    
+    # Step 2: Simulate getting tracking number (in real app, this would come from supplier API)
+    tracking_carriers = ['USPS', 'UPS', 'FedEx', 'DHL']
+    import random
+    tracking_number = f"{random.choice(tracking_carriers)}{random.randint(1000000000, 9999999999)}"
+    
+    order['tracking_number'] = tracking_number
+    order['carrier'] = random.choice(tracking_carriers)
+    order['status'] = 'shipped'
+    order['shipped_at'] = datetime.now().isoformat()
+    order['auto_fulfilled'] = True
+    
+    save_orders(orders)
+    
+    # Step 3: Send tracking to customer
+    if email_settings.get('enabled') and order.get('customer_email'):
+        customer_email_body = f"""
+        <h2>Your order has been shipped! 📦</h2>
+        <p>Hi {order['customer_name']},</p>
+        <p>Great news! Your order has been automatically processed and shipped.</p>
+        <p><strong>Order ID:</strong> {order['id']}</p>
+        <p><strong>Product:</strong> {order['product_name']} x {order['quantity']}</p>
+        <p><strong>Tracking Number:</strong> {tracking_number}</p>
+        <p><strong>Carrier:</strong> {order['carrier']}</p>
+        <p>Track your package: <a href="https://t.track/{tracking_number}">Click here</a></p>
+        <p>Thank you for your order!</p>
+        """
+        send_email(order['customer_email'], f'Order {order["id"]} Shipped!', customer_email_body, email_settings)
+    
+    return jsonify({
+        'success': True,
+        'order_id': order_id,
+        'tracking_number': tracking_number,
+        'carrier': order['carrier'],
+        'email_sent': email_settings.get('enabled')
+    })
+
+@app.route('/api/fulfill-all-pending', methods=['POST'])
+def auto_fulfill_all_pending():
+    """Auto-fulfill all pending orders"""
+    orders = load_orders()
+    pending_orders = [o for o in orders if o.get('status') == 'pending']
+    
+    results = []
+    for order in pending_orders:
+        result = auto_fulfill_order(order['id']).get_json()
+        results.append(result)
+    
+    return jsonify({
+        'fulfilled': len([r for r in results if r.get('success')]),
+        'results': results
+    })

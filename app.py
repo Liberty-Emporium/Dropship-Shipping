@@ -495,3 +495,71 @@ def import_products():
         return redirect(url_for('list_products'))
     
     return render_template('import_products.html')
+
+# ============== CUSTOMER MANAGEMENT ==============
+
+def load_customers():
+    path = os.path.join(DATA_DIR, 'customers.json')
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    return []
+
+def save_customers(customers):
+    with open(os.path.join(DATA_DIR, 'customers.json'), 'w') as f:
+        json.dump(customers, f, indent=2)
+
+@app.route('/customers')
+def list_customers():
+    customers = load_customers()
+    return render_template('customers.html', customers=customers)
+
+@app.route('/customer/add', methods=['GET', 'POST'])
+def add_customer():
+    if request.method == 'POST':
+        customers = load_customers()
+        customer = {
+            'id': f"CUST-{len(customers) + 1:05d}",
+            'name': request.form.get('name'),
+            'email': request.form.get('email'),
+            'phone': request.form.get('phone'),
+            'address': request.form.get('address'),
+            'total_orders': 0,
+            'total_spent': 0,
+            'created_at': datetime.now().isoformat()
+        }
+        customers.append(customer)
+        save_customers(customers)
+        flash(f'Customer {customer["id"]} added!', 'success')
+        return redirect(url_for('list_customers'))
+    
+    return render_template('add_customer.html')
+
+# Auto-create customer when order is placed
+@app.route('/api/auto-customer', methods=['POST'])
+def auto_create_customer():
+    """Automatically create or update customer from order"""
+    data = request.json
+    email = data.get('email', '')
+    
+    customers = load_customers()
+    existing = next((c for c in customers if c.get('email') == email), None)
+    
+    if existing:
+        existing['total_orders'] = existing.get('total_orders', 0) + 1
+        existing['total_spent'] = existing.get('total_spent', 0) + data.get('total', 0)
+    else:
+        customer = {
+            'id': f"CUST-{len(customers) + 1:05d}",
+            'name': data.get('name', ''),
+            'email': email,
+            'phone': data.get('phone', ''),
+            'address': data.get('address', ''),
+            'total_orders': 1,
+            'total_spent': data.get('total', 0),
+            'created_at': datetime.now().isoformat()
+        }
+        customers.append(customer)
+    
+    save_customers(customers)
+    return jsonify({'success': True, 'customer_count': len(customers)})

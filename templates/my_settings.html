@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>My AI Settings | Dropship Shipping</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: Arial, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; }
+.container { max-width: 600px; margin: 0 auto; padding: 2rem; }
+h1 { margin-bottom: 0.5rem; }
+.subtitle { color: #888; margin-bottom: 2rem; }
+.card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 2rem; }
+.form-group { margin-bottom: 1.5rem; }
+label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+input, select { width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 1rem; }
+select option { background: #1a1a2e; }
+.btn { width: 100%; padding: 1rem; background: #6c63ff; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 1rem; }
+.alert { padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1rem; }
+.alert-success { background: rgba(16,185,129,0.2); border: 1px solid #10b981; }
+.nav a { color: #6c63ff; text-decoration: none; display: inline-block; margin-bottom: 1.5rem; }
+.help { font-size: 0.8rem; color: #888; margin-top: 0.3rem; }
+</style></head>
+<body>
+<div class="container">
+    <a class="nav" href="/dashboard">← Back to Dashboard</a>
+    <h1>⚙️ My AI Settings</h1>
+    <p class="subtitle">Your personal AI API keys</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    <div class="card">
+        <form method="POST">
+            <div class="form-group">
+                <label>Active AI Provider</label>
+                <select name="active_provider">
+                    <option value="qwen" {% if keys.active_provider == 'qwen' %}selected{% endif %}>Qwen (Recommended)</option>
+                    <option value="groq" {% if keys.active_provider == 'groq' %}selected{% endif %}>Groq</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Qwen API Key</label>
+                <input type="password" name="qwen_key" placeholder="{% if keys.qwen_key %}{{ keys.qwen_key }}{% else %}Enter Qwen API key{% endif %}">
+                <p class="help">Get key at dashscope.aliyuncs.com</p>
+            </div>
+            <div class="form-group">
+                <label>Groq API Key</label>
+                <input type="password" name="groq_key" placeholder="{% if keys.groq_key %}{{ keys.groq_key }}{% else %}Enter Groq API key{% endif %}">
+                <p class="help">Get free key at console.groq.com</p>
+            </div>
+            <button type="submit" class="btn">💾 Save Settings</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

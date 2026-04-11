@@ -3,16 +3,71 @@ Andyping Shipping App
 Track orders and manage shipping for dropshipping business
 """
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
 import os
 import json
+import sqlite3
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get('SECRET_KEY', 'dropship-secret-key-2024')
 
 DATA_DIR = os.environ.get('DATA_DIR', os.path.join('/data'))
 os.makedirs(DATA_DIR, exist_ok=True)
+
+# ============== DATABASE ==============
+DB_FILE = os.path.join(DATA_DIR, 'dropship.db')
+
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(DB_FILE)
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(e=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
+
+def init_db():
+    db = sqlite3.connect(DB_FILE)
+    db.execute('''CREATE TABLE IF NOT EXISTS user_api_keys (
+        user_id TEXT PRIMARY KEY,
+        groq_key TEXT DEFAULT '',
+        qwen_key TEXT DEFAULT '',
+        active_provider TEXT DEFAULT 'qwen',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+    db.execute('''CREATE TABLE IF NOT EXISTS admin_api_keys (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        groq_key TEXT DEFAULT '',
+        qwen_key TEXT DEFAULT '',
+        active_provider TEXT DEFAULT 'qwen',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+    db.commit()
+    db.close()
+
+init_db()
+
+def get_user_api_keys(user_id=None):
+    """Get API keys - user key first, fall back to admin keys"""
+    db = get_db()
+    if user_id:
+        row = db.execute('SELECT * FROM user_api_keys WHERE user_id = ?', (user_id,)).fetchone()
+        if row and (row['groq_key'] or row['qwen_key']):
+            return {'groq_key': row['groq_key'], 'qwen_key': row['qwen_key'], 'active_provider': row['active_provider']}
+    row = db.execute('SELECT * FROM admin_api_keys WHERE id = 1').fetchone()
+    if row:
+        return {'groq_key': row['groq_key'], 'qwen_key': row['qwen_key'], 'active_provider': row['active_provider']}
+    return {'groq_key': '', 'qwen_key': '', 'active_provider': 'qwen'}
+
+def get_ceo_for_user(user_id=None):
+    """Get an AICEO instance loaded with the right API keys"""
+    from ai_ceo import AICEO
+    keys = get_user_api_keys(user_id)
+    return AICEO(api_keys=keys, active_provider=keys.get('active_provider', 'qwen'))
 
 # ============== DATA FUNCTIONS ==============
 
@@ -247,57 +302,33 @@ def calculate_shipping():
 @app.route('/api/ceo/think', methods=['POST'])
 def ceo_think():
     """Ask the AI CEO to think about something"""
-    from ai_ceo import ceo
-    
     data = request.json
     prompt = data.get('prompt', '')
-    
     if not prompt:
         return jsonify({'error': 'No prompt provided'}), 400
-    
+    ceo = get_ceo_for_user(session.get('user_id'))
     result = ceo.think(prompt)
-    
-    return jsonify({
-        'response': result,
-        'ceo': ceo.name,
-        'time': datetime.now().isoformat()
-    })
+    return jsonify({'response': result, 'ceo': ceo.name, 'time': datetime.now().isoformat()})
 
 @app.route('/api/ceo/decide', methods=['POST'])
 def ceo_decide():
     """Ask AI CEO to make a decision"""
-    from ai_ceo import ceo
-    
     data = request.json
     situation = data.get('situation', '')
-    
     if not situation:
         return jsonify({'error': 'No situation provided'}), 400
-    
+    ceo = get_ceo_for_user(session.get('user_id'))
     result = ceo.decide(situation)
-    
-    # Check if it wants to BUILD something
-    build_request = None
-    if 'BUILD:' in result:
-        build_request = result.split('BUILD:')[1].strip()
-    
-    return jsonify({
-        'decision': result,
-        'build_request': build_request,
-        'ceo': ceo.name,
-        'time': datetime.now().isoformat()
-    })
+    build_request = result.split('BUILD:')[1].strip() if 'BUILD:' in result else None
+    return jsonify({'decision': result, 'build_request': build_request, 'ceo': ceo.name, 'time': datetime.now().isoformat()})
 
 @app.route('/api/ceo/analyze', methods=['GET'])
 def ceo_analyze():
     """Get AI CEO analysis of business"""
-    from ai_ceo import ceo
-    
+    ceo = get_ceo_for_user(session.get('user_id'))
     orders = load_orders()
     products = load_products()
-    
     analysis = ceo.analyze_performance(orders, products)
-    
     return jsonify({
         'analysis': analysis,
         'stats': {
@@ -314,14 +345,9 @@ def ceo_analyze():
 @app.route('/api/ceo/marketing', methods=['GET'])
 def ceo_marketing():
     """Get marketing plan from AI CEO"""
-    from ai_ceo import ceo
-    
+    ceo = get_ceo_for_user(session.get('user_id'))
     plan = ceo.create_marketing_plan()
-    
-    return jsonify({
-        'plan': plan,
-        'ceo': ceo.name
-    })
+    return jsonify({'plan': plan, 'ceo': ceo.name})
 
 @app.route('/api/business/status', methods=['GET'])
 def business_status():
@@ -918,3 +944,48 @@ def stripe_webhook():
         return jsonify({'error': 'Invalid signature'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+
+# ============== AI KEY SETTINGS ==============
+
+@app.route('/admin/ai-settings', methods=['GET', 'POST'])
+def admin_ai_settings():
+    """Admin: set system-wide default AI keys"""
+    db = get_db()
+    if request.method == 'POST':
+        groq_key = request.form.get('groq_key', '').strip()
+        qwen_key = request.form.get('qwen_key', '').strip()
+        active_provider = request.form.get('active_provider', 'qwen')
+        db.execute('''INSERT OR REPLACE INTO admin_api_keys (id, groq_key, qwen_key, active_provider, updated_at)
+            VALUES (1, ?, ?, ?, CURRENT_TIMESTAMP)''', (groq_key, qwen_key, active_provider))
+        db.commit()
+        flash('Admin AI settings saved!', 'success')
+        return redirect(url_for('admin_ai_settings'))
+    row = db.execute('SELECT * FROM admin_api_keys WHERE id = 1').fetchone()
+    keys = dict(row) if row else {'groq_key': '', 'qwen_key': '', 'active_provider': 'qwen'}
+    for k in ['groq_key', 'qwen_key']:
+        if keys.get(k):
+            keys[k] = keys[k][:8] + '...'
+    return render_template('admin_ai_settings.html', keys=keys)
+
+@app.route('/my-settings', methods=['GET', 'POST'])
+def my_settings():
+    """Per-user AI API key settings"""
+    user_id = session.get('user_id', 'guest')
+    db = get_db()
+    if request.method == 'POST':
+        groq_key = request.form.get('groq_key', '').strip()
+        qwen_key = request.form.get('qwen_key', '').strip()
+        active_provider = request.form.get('active_provider', 'qwen')
+        db.execute('''INSERT OR REPLACE INTO user_api_keys
+            (user_id, groq_key, qwen_key, active_provider, updated_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)''', (user_id, groq_key, qwen_key, active_provider))
+        db.commit()
+        flash('Your AI settings saved!', 'success')
+        return redirect(url_for('my_settings'))
+    row = db.execute('SELECT * FROM user_api_keys WHERE user_id = ?', (user_id,)).fetchone()
+    keys = dict(row) if row else {'groq_key': '', 'qwen_key': '', 'active_provider': 'qwen'}
+    for k in ['groq_key', 'qwen_key']:
+        if keys.get(k):
+            keys[k] = keys[k][:8] + '...'
+    return render_template('my_settings.html', keys=keys)

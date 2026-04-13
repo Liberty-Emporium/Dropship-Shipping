@@ -68,33 +68,13 @@
     <button type="submit" class="btn-save">💾 Save Settings</button>
   </form>
 
-  <!-- OpenClaw Bot -->
-  <div class="set-card" style="margin-top:1.5rem;">
-    <h2>🐙 OpenClaw Bot</h2>
-    {% if oc.gateway_url and oc.token_set %}
-    <div class="status-ok">✅ OpenClaw connected — {{ oc.gateway_url }}</div>
-    {% else %}
-    <div class="status-warn">⚠️ OpenClaw not connected — configure below to enable the AI chat panel</div>
-    {% endif %}
-    <div class="field">
-      <label>Gateway URL</label>
-      <input type="text" id="ocUrl" value="{{ oc.gateway_url or '' }}" placeholder="https://your-openclaw.fly.dev">
+  <!-- AI Assistant info -->
+  <div class="set-card" style="margin-top:1.5rem; background:#f5f3ff; border-color:#c4b5fd;">
+    <h2>🤖 AI CEO Assistant</h2>
+    <p style="color:#6b7280; font-size:0.88rem; line-height:1.7; margin-bottom:0.75rem;">Your AI CEO is powered by OpenRouter. Add your OpenRouter API key in the AI settings above to activate it. The 🤖 button will appear on every page once your key is set.</p>
+    <div style="background:#ede9fe; border-radius:8px; padding:0.75rem 1rem; font-size:0.85rem; color:#6d28d9;">
+      💡 Get a free key at <a href="https://openrouter.ai/keys" target="_blank" style="color:#7c3aed; font-weight:600;">openrouter.ai/keys</a> — takes 2 minutes.
     </div>
-    <div class="field">
-      <label>Gateway Token</label>
-      <input type="password" id="ocToken" placeholder="Bearer token">
-    </div>
-    <div class="oc-row">
-      <button type="button" class="btn-test" onclick="ocTest()">🔌 Test Connection</button>
-      <span id="ocTestStatus">{{ '✅ Connected' if oc.gateway_url else 'Not configured' }}</span>
-    </div>
-    <div class="field" id="ocAgentRow" style="margin-top:0.75rem; display:{% if oc.gateway_url %}block{% else %}none{% endif %};">
-      <label>Agent</label>
-      <select id="ocAgent">
-        <option value="openclaw/default">openclaw/default</option>
-      </select>
-    </div>
-    <button type="button" class="btn-save" style="margin-top:0.75rem;" onclick="ocSave()">💾 Save Bot Config</button>
   </div>
 
   <div style="margin-top:1rem;">
@@ -103,36 +83,4 @@
     <a href="/settings/pricing" style="color:#7c3aed; font-weight:600; font-size:0.9rem;">💰 Pricing Settings →</a>
   </div>
 </div>
-
-<script>
-function ocTest() {
-  var url = document.getElementById('ocUrl').value.trim();
-  var token = document.getElementById('ocToken').value.trim();
-  var st = document.getElementById('ocTestStatus');
-  if (!url || !token) { st.textContent = '⚠️ Enter URL and token first'; return; }
-  st.textContent = 'Testing...';
-  fetch('/api/bot/test', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gateway_url:url,token:token})})
-    .then(r=>r.json()).then(d=>{
-      if (d.ok) {
-        st.textContent = '✅ Connected! Models: ' + (d.models||[]).join(', ');
-        st.style.color = '#16a34a';
-        document.getElementById('ocAgentRow').style.display = 'block';
-        var sel = document.getElementById('ocAgent');
-        sel.innerHTML = '';
-        (d.models||['openclaw/default']).forEach(function(m){ var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o); });
-      } else {
-        st.textContent = '❌ ' + d.error; st.style.color = '#dc2626';
-      }
-    }).catch(e=>{ st.textContent='❌ '+e; st.style.color='#dc2626'; });
-}
-function ocSave() {
-  var url = document.getElementById('ocUrl').value.trim();
-  var token = document.getElementById('ocToken').value.trim();
-  var agent = document.getElementById('ocAgent').value.trim();
-  fetch('/api/bot/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gateway_url:url,token:token,agent:agent})})
-    .then(r=>r.json()).then(d=>{
-      if(d.success){ document.getElementById('ocTestStatus').textContent='✅ Saved!'; document.getElementById('ocTestStatus').style.color='#16a34a'; }
-    });
-}
-</script>
 {% endblock %}

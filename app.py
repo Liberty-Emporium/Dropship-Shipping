@@ -1,6 +1,6 @@
 """
 Dropship AI CEO - Multi-Tenant SaaS Platform
-Full multi-tenant dropshipping platform with AI CEO, OpenClaw bot, OpenRouter
+Full multi-tenant dropshipping platform with AI CEO powered by OpenRouter
 """
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
@@ -211,12 +211,20 @@ def ceo_think(prompt, slug=None, context=None):
         system += f"\n\nBusiness context: {context}"
     return ai_chat([{'role':'system','content':system},{'role':'user','content':prompt}], slug)
 
-# ── OpenClaw Bot ───────────────────────────────────────────────────────────────
-def get_openclaw_config(slug=None):
+# ── AI Assistant (OpenRouter) ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+def _get_ai_key(slug=None):
     if slug:
         cfg = load_client_config(slug)
-        return {'gateway_url': cfg.get('openclaw_gateway_url',''), 'token': cfg.get('openclaw_token',''), 'agent': cfg.get('openclaw_agent','openclaw/default')}
-    return {'gateway_url': get_config('openclaw_gateway_url'), 'token': get_config('openclaw_token'), 'agent': get_config('openclaw_agent','openclaw/default')}
+        key = cfg.get('openrouter_api_key','')
+        if key: return key
+    return get_config('openrouter_api_key','')
+
+def _get_ai_model(slug=None):
+    if slug:
+        cfg = load_client_config(slug)
+        m = cfg.get('ai_chat_model','')
+        if m: return m
+    return get_config('ai_chat_model','openai/gpt-4o-mini')
 
 # ── Context for templates ──────────────────────────────────────────────────────
 def ctx():
@@ -225,7 +233,6 @@ def ctx():
     if slug:
         cfg = load_client_config(slug) or {}
         store_name = cfg.get('store_name', APP_NAME)
-    oc = get_openclaw_config(slug)
     return {
         'app_name': APP_NAME,
         'store_name': store_name,
@@ -233,7 +240,7 @@ def ctx():
         'current_role': session.get('role'),
         'store_slug': slug,
         'impersonating': bool(session.get('impersonating_slug')),
-        'oc_configured': bool(oc['gateway_url'] and oc['token']),
+        'oc_configured': False,
     }
 
 # ── Landing / Public ───────────────────────────────────────────────────────────
@@ -658,7 +665,7 @@ def settings():
         return redirect(url_for('settings'))
     current_model = get_openrouter_model(slug)
     key_set = bool(get_openrouter_key(slug) or get_groq_key(slug))
-    oc = get_openclaw_config(slug)
+    oc = {'gateway_url': '', 'token': '', 'agent': '', 'token_set': False}
     return render_template('settings.html', current_model=current_model, key_set=key_set, oc=oc, **ctx())
 
 @app.route('/settings/email', methods=['GET','POST'])
@@ -767,7 +774,7 @@ def overseer_delete(slug):
     flash('Store deleted.','success')
     return redirect(url_for('overseer'))
 
-# ── OpenClaw Bot API ───────────────────────────────────────────────────────────
+# ── AI Assistant API (OpenRouter) ────────────────────────────────────────────────────────────────────────────────────────────────────────
 @app.route('/api/bot/chat', methods=['POST'])
 @login_required
 def api_bot_chat():
@@ -776,75 +783,48 @@ def api_bot_chat():
     data    = request.get_json() or {}
     message = data.get('message','').strip()
     history = data.get('history',[])
-    if not message: return jsonify({'error':'No message'}), 400
-    oc = get_openclaw_config(slug)
-    if not oc['gateway_url'] or not oc['token']:
-        return jsonify({'error':'OpenClaw not configured. Add Gateway URL and token in Settings ⚙️'}), 400
+    image_b64  = data.get('image', None)
+    image_mime = data.get('image_mime','image/jpeg')
+    if not message and not image_b64: return jsonify({'error':'No message'}), 400
+    api_key = _get_ai_key(slug)
+    model   = _get_ai_model(slug)
+    if not api_key:
+        return jsonify({'error':'No OpenRouter API key set. Add one in Settings ⚙️ → API Keys.'}), 400
     orders   = load_orders(slug)
     products = load_products(slug)
     revenue  = sum(float(o.get('total',0)) for o in orders)
+    pending  = len([o for o in orders if o.get('status')=='pending'])
     store_name = load_client_config(slug).get('store_name', APP_NAME) if slug else APP_NAME
-    system   = (f"You are the AI assistant for {store_name}, a dropshipping business using Dropship AI CEO platform. "
-                f"Current stats: {len(orders)} orders, {len(products)} products, ${revenue:.2f} revenue, "
-                f"{len([o for o in orders if o.get('status')=='pending'])} pending orders. "
-                f"Help with dropshipping strategy, product research, order management, and growing the business.")
+    items_summary = '; '.join(f"{p.get('name','?')} (${p.get('price','?')})" for p in products[:15])
+    system = (f"You are the AI CEO for {store_name}, a dropshipping business. "
+              f"Stats: {len(orders)} orders, {len(products)} products, ${revenue:.2f} revenue, {pending} pending. "
+              f"Products: {items_summary}. "
+              f"Help with strategy, product research, pricing, marketing, and growing the business. Be concise.")
     messages = [{'role':'system','content':system}]
     for h in history[-10:]:
         if h.get('role') in ('user','assistant') and h.get('content'):
             messages.append({'role':h['role'],'content':h['content']})
-    messages.append({'role':'user','content':message})
+    if image_b64:
+        user_content = [{'type':'text','text': message or 'Analyze this for my dropshipping store.'},
+                        {'type':'image_url','image_url':{'url':f'data:{image_mime};base64,{image_b64}'}}]
+    else:
+        user_content = message
+    messages.append({'role':'user','content':user_content})
     try:
-        payload = json.dumps({'model':oc['agent'],'messages':messages,'stream':False}).encode()
-        req = ur.Request(oc['gateway_url'].rstrip('/')+'/v1/chat/completions', data=payload,
-            headers={'Authorization':f"Bearer {oc['token']}",'Content-Type':'application/json'})
-        with ur.urlopen(req, timeout=30) as resp:
+        payload = json.dumps({'model':model,'messages':messages,'stream':False}).encode()
+        req = ur.Request('https://openrouter.ai/api/v1/chat/completions', data=payload,
+            headers={'Authorization':f'Bearer {api_key}','Content-Type':'application/json',
+                     'HTTP-Referer':'https://dropship-ai.app','X-Title':'Dropship AI CEO'})
+        with ur.urlopen(req, timeout=90) as resp:
             result = json.loads(resp.read())
         return jsonify({'reply': result['choices'][0]['message']['content']})
     except ue.HTTPError as e:
-        return jsonify({'error': f'Gateway error {e.code}: {e.reason}'}), 502
+        body=''
+        try: body=e.read().decode()
+        except: pass
+        return jsonify({'error': f'OpenRouter error {e.code}: {body or e.reason}'}), 502
     except Exception as e:
         return jsonify({'error': str(e)}), 502
-
-@app.route('/api/bot/config', methods=['GET','POST'])
-@login_required
-def api_bot_config():
-    slug     = active_slug()
-    is_admin = session.get('role') == 'admin'
-    if request.method == 'GET':
-        oc = get_openclaw_config(slug)
-        return jsonify({'gateway_url':oc['gateway_url'],'agent':oc['agent'],'token_set':bool(oc['token']),'token_masked':oc['token'][:8]+'...' if len(oc['token'])>8 else ('set' if oc['token'] else '')})
-    data = request.get_json() or {}
-    url   = data.get('gateway_url','').strip()
-    token = data.get('token','').strip()
-    agent = data.get('agent','openclaw/default').strip()
-    if slug and not is_admin:
-        cfg = load_client_config(slug)
-        cfg['openclaw_gateway_url'] = url; cfg['openclaw_agent'] = agent
-        if token: cfg['openclaw_token'] = token
-        save_client_config(slug, cfg)
-    else:
-        set_config('openclaw_gateway_url', url); set_config('openclaw_agent', agent)
-        if token: set_config('openclaw_token', token)
-    return jsonify({'success':True})
-
-@app.route('/api/bot/test', methods=['POST'])
-@login_required
-def api_bot_test():
-    import urllib.request as ur, urllib.error as ue
-    data  = request.get_json() or {}
-    url   = data.get('gateway_url','').strip().rstrip('/')
-    token = data.get('token','').strip()
-    if not url or not token: return jsonify({'ok':False,'error':'URL and token required'}), 400
-    try:
-        req = ur.Request(url+'/v1/models', headers={'Authorization':f'Bearer {token}'})
-        with ur.urlopen(req, timeout=10) as resp:
-            result = json.loads(resp.read())
-        models = [m['id'] for m in result.get('data',[])]
-        return jsonify({'ok':True,'models':models})
-    except ue.HTTPError as e:
-        return jsonify({'ok':False,'error':f'HTTP {e.code}: {e.reason}'})
-    except Exception as e:
-        return jsonify({'ok':False,'error':str(e)})
 
 # ── Misc API ───────────────────────────────────────────────────────────────────
 @app.route('/api/business/status', methods=['GET'])

@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}Settings — {{ store_name }}{% endblock %}
+{% block content %}
+<style>
+  .set-wrap { max-width:680px; margin:2rem auto; padding:0 1rem; }
+  .set-wrap h1 { font-size:1.6rem; font-weight:900; color:#0f172a; margin:0 0 1.5rem; }
+  .set-card { background:white; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,0.08); padding:1.75rem 2rem; margin-bottom:1.5rem; }
+  .set-card h2 { font-size:1.05rem; font-weight:700; color:#0f172a; margin:0 0 1rem; padding-bottom:0.5rem; border-bottom:2px solid #f1f5f9; }
+  .field { margin-bottom:1rem; }
+  .field label { display:block; font-size:0.8rem; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.35rem; }
+  .field input, .field select { width:100%; padding:0.65rem 0.9rem; border:1.5px solid #e2e8f0; border-radius:10px; font-size:0.9rem; box-sizing:border-box; }
+  .field input:focus, .field select:focus { outline:none; border-color:#7c3aed; }
+  .field small { font-size:0.75rem; color:#94a3b8; margin-top:0.25rem; display:block; }
+  .btn-save { background:#7c3aed; color:white; border:none; padding:0.75rem 2rem; border-radius:10px; font-weight:700; cursor:pointer; }
+  .status-ok { background:#dcfce7; color:#166534; padding:0.6rem 1rem; border-radius:8px; font-size:0.85rem; margin-bottom:1rem; }
+  .status-warn { background:#fef9c3; color:#854d0e; padding:0.6rem 1rem; border-radius:8px; font-size:0.85rem; margin-bottom:1rem; }
+  .oc-row { display:flex; gap:0.5rem; align-items:center; margin-top:0.5rem; }
+  .btn-test { background:#3b82f6; color:white; border:none; padding:0.5rem 1rem; border-radius:8px; font-size:0.85rem; font-weight:600; cursor:pointer; }
+  #ocTestStatus { font-size:0.82rem; color:#64748b; }
+</style>
+<div class="set-wrap">
+  <h1>⚙️ Settings</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div style="background:{% if cat=='error' %}#fee2e2{% else %}#dcfce7{% endif %};color:{% if cat=='error' %}#991b1b{% else %}#166534{% endif %};padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:0.88rem;">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST">
+    <!-- AI Keys -->
+    <div class="set-card">
+      <h2>🤖 AI Keys</h2>
+      {% if key_set %}
+      <div class="status-ok">✅ AI configured — CEO features active</div>
+      {% else %}
+      <div class="status-warn">⚠️ No AI key set — CEO features disabled</div>
+      {% endif %}
+      <div class="field">
+        <label>OpenRouter API Key <span style="font-weight:400;text-transform:none;">(recommended)</span></label>
+        <input type="password" name="openrouter_key" placeholder="sk-or-...">
+        <small>Get at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> — access 100+ models</small>
+      </div>
+      <div class="field">
+        <label>OpenRouter Model</label>
+        <select name="openrouter_model">
+          <optgroup label="Vision + Text (Recommended)">
+            <option value="google/gemini-flash-1.5" {% if current_model=='google/gemini-flash-1.5' %}selected{% endif %}>Gemini Flash 1.5 — Fast & cheap ⭐</option>
+            <option value="google/gemini-pro-1.5" {% if current_model=='google/gemini-pro-1.5' %}selected{% endif %}>Gemini Pro 1.5 — Highest quality</option>
+            <option value="anthropic/claude-3.5-sonnet" {% if current_model=='anthropic/claude-3.5-sonnet' %}selected{% endif %}>Claude 3.5 Sonnet — Best reasoning</option>
+            <option value="anthropic/claude-3-haiku" {% if current_model=='anthropic/claude-3-haiku' %}selected{% endif %}>Claude 3 Haiku — Fast & affordable</option>
+            <option value="openai/gpt-4o-mini" {% if current_model=='openai/gpt-4o-mini' %}selected{% endif %}>GPT-4o Mini — Affordable OpenAI</option>
+          </optgroup>
+          <optgroup label="Free Models">
+            <option value="meta-llama/llama-3.1-8b-instruct:free" {% if current_model=='meta-llama/llama-3.1-8b-instruct:free' %}selected{% endif %}>Llama 3.1 8B — Free</option>
+            <option value="mistralai/mistral-7b-instruct:free" {% if current_model=='mistralai/mistral-7b-instruct:free' %}selected{% endif %}>Mistral 7B — Free</option>
+          </optgroup>
+        </select>
+        <small>Browse all: <a href="https://openrouter.ai/models" target="_blank">openrouter.ai/models</a></small>
+      </div>
+      <div class="field">
+        <label>Groq API Key <span style="font-weight:400;text-transform:none;">(fast fallback)</span></label>
+        <input type="password" name="groq_key" placeholder="gsk_...">
+        <small>Free tier at <a href="https://console.groq.com" target="_blank">console.groq.com</a></small>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-save">💾 Save Settings</button>
+  </form>
+
+  <!-- OpenClaw Bot -->
+  <div class="set-card" style="margin-top:1.5rem;">
+    <h2>🐙 OpenClaw Bot</h2>
+    {% if oc.gateway_url and oc.token_set %}
+    <div class="status-ok">✅ OpenClaw connected — {{ oc.gateway_url }}</div>
+    {% else %}
+    <div class="status-warn">⚠️ OpenClaw not connected — configure below to enable the AI chat panel</div>
+    {% endif %}
+    <div class="field">
+      <label>Gateway URL</label>
+      <input type="text" id="ocUrl" value="{{ oc.gateway_url or '' }}" placeholder="https://your-openclaw.fly.dev">
+    </div>
+    <div class="field">
+      <label>Gateway Token</label>
+      <input type="password" id="ocToken" placeholder="Bearer token">
+    </div>
+    <div class="oc-row">
+      <button type="button" class="btn-test" onclick="ocTest()">🔌 Test Connection</button>
+      <span id="ocTestStatus">{{ '✅ Connected' if oc.gateway_url else 'Not configured' }}</span>
+    </div>
+    <div class="field" id="ocAgentRow" style="margin-top:0.75rem; display:{% if oc.gateway_url %}block{% else %}none{% endif %};">
+      <label>Agent</label>
+      <select id="ocAgent">
+        <option value="openclaw/default">openclaw/default</option>
+      </select>
+    </div>
+    <button type="button" class="btn-save" style="margin-top:0.75rem;" onclick="ocSave()">💾 Save Bot Config</button>
+  </div>
+
+  <div style="margin-top:1rem;">
+    <a href="/settings/email" style="color:#7c3aed; font-weight:600; font-size:0.9rem;">📧 Email Settings →</a>
+    &nbsp;&nbsp;
+    <a href="/settings/pricing" style="color:#7c3aed; font-weight:600; font-size:0.9rem;">💰 Pricing Settings →</a>
+  </div>
+</div>
+
+<script>
+function ocTest() {
+  var url = document.getElementById('ocUrl').value.trim();
+  var token = document.getElementById('ocToken').value.trim();
+  var st = document.getElementById('ocTestStatus');
+  if (!url || !token) { st.textContent = '⚠️ Enter URL and token first'; return; }
+  st.textContent = 'Testing...';
+  fetch('/api/bot/test', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gateway_url:url,token:token})})
+    .then(r=>r.json()).then(d=>{
+      if (d.ok) {
+        st.textContent = '✅ Connected! Models: ' + (d.models||[]).join(', ');
+        st.style.color = '#16a34a';
+        document.getElementById('ocAgentRow').style.display = 'block';
+        var sel = document.getElementById('ocAgent');
+        sel.innerHTML = '';
+        (d.models||['openclaw/default']).forEach(function(m){ var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o); });
+      } else {
+        st.textContent = '❌ ' + d.error; st.style.color = '#dc2626';
+      }
+    }).catch(e=>{ st.textContent='❌ '+e; st.style.color='#dc2626'; });
+}
+function ocSave() {
+  var url = document.getElementById('ocUrl').value.trim();
+  var token = document.getElementById('ocToken').value.trim();
+  var agent = document.getElementById('ocAgent').value.trim();
+  fetch('/api/bot/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({gateway_url:url,token:token,agent:agent})})
+    .then(r=>r.json()).then(d=>{
+      if(d.success){ document.getElementById('ocTestStatus').textContent='✅ Saved!'; document.getElementById('ocTestStatus').style.color='#16a34a'; }
+    });
+}
+</script>
+{% endblock %}

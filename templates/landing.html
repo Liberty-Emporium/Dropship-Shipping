@@ -1,60 +1,97 @@
-{% extends "base.html" %}
-
-{% block title %}Andy AI CEO - Pricing{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}Dropship AI CEO — AI-Powered Dropshipping Platform{% endblock %}
 {% block content %}
-<div class="text-center py-5">
-    <h1 class="display-4">🤖 Andy AI CEO</h1>
-    <p class="lead">The ONLY dropshipping platform with a built-in AI that runs your business for you.</p>
-    
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-6">
-            <div class="card border-primary">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0">🚀 Pro Plan</h2>
-                </div>
-                <div class="card-body">
-                    <h1 class="display-4">$59<span class="h4">/month</span></h1>
-                    <p class="text-muted">Everything you need to run your dropshipping business</p>
-                    
-                    <ul class="text-left list-group list-group-flush mt-4">
-                        <li class="list-group-item">✅ AI CEO - Business decisions & recommendations</li>
-                        <li class="list-group-item">✅ Unlimited Orders</li>
-                        <li class="list-group-item">✅ Unlimited Products</li>
-                        <li class="list-group-item">✅ Unlimited Customers</li>
-                        <li class="list-group-item">✅ Auto-Fulfillment System</li>
-                        <li class="list-group-item">✅ AI Ad Generator</li>
-                        <li class="list-group-item">✅ AI Email Writer</li>
-                        <li class="list-group-item">✅ Product Research</li>
-                        <li class="list-group-item">✅ Analytics Dashboard</li>
-                        <li class="list-group-item">✅ Priority Support</li>
-                    </ul>
-                    
-                    <a href="/signup" class="btn btn-primary btn-lg mt-4">Start Free Trial</a>
-                    <p class="mt-3 text-muted">14-day free trial, cancel anytime</p>
-                </div>
-            </div>
-        </div>
+<style>
+  .lp { max-width:1100px; margin:0 auto; padding:0 1rem 4rem; }
+  .hero { text-align:center; padding:4rem 1rem 3rem; background:linear-gradient(135deg,#0f172a,#1e1b4b); color:white; margin-bottom:3rem; border-radius:0 0 24px 24px; }
+  .hero h1 { font-size:2.8rem; font-weight:900; margin:0 0 1rem; line-height:1.1; }
+  .hero h1 span { color:#818cf8; }
+  .hero p { font-size:1.2rem; color:#94a3b8; max-width:600px; margin:0 auto 2rem; }
+  .hero-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+  .btn-primary { background:#7c3aed; color:white; padding:0.9rem 2.5rem; border-radius:12px; font-size:1.1rem; font-weight:700; text-decoration:none; display:inline-block; }
+  .btn-primary:hover { background:#6d28d9; }
+  .btn-secondary { background:rgba(255,255,255,0.1); color:white; padding:0.9rem 2rem; border-radius:12px; font-size:1.1rem; font-weight:700; text-decoration:none; border:2px solid rgba(255,255,255,0.2); }
+  .features { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.5rem; margin-bottom:3rem; }
+  .feature { background:white; border-radius:14px; padding:1.75rem; box-shadow:0 2px 12px rgba(0,0,0,0.07); }
+  .feature .icon { font-size:2rem; margin-bottom:0.75rem; }
+  .feature h3 { font-size:1.05rem; font-weight:700; color:#0f172a; margin:0 0 0.5rem; }
+  .feature p { font-size:0.88rem; color:#64748b; margin:0; line-height:1.5; }
+  .pricing { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border-radius:20px; padding:2.5rem; text-align:center; margin-bottom:3rem; }
+  .pricing h2 { font-size:1.8rem; color:#0f172a; margin:0 0 0.5rem; }
+  .pricing .price { font-size:3.5rem; font-weight:900; color:#16a34a; }
+  .pricing .price span { font-size:1.2rem; font-weight:400; color:#64748b; }
+  .pricing ul { list-style:none; padding:0; margin:1.5rem auto; max-width:400px; text-align:left; }
+  .pricing li { padding:0.4rem 0; font-size:0.95rem; color:#374151; }
+  .pricing li:before { content:'✅ '; }
+  .cta { text-align:center; }
+  .cta h2 { font-size:2rem; color:#0f172a; margin-bottom:1rem; }
+</style>
+
+<div class="hero">
+  <div style="font-size:3rem; margin-bottom:1rem;">🤖</div>
+  <h1>The <span>AI CEO</span> That Runs Your Dropshipping Business</h1>
+  <p>The first dropshipping platform with a built-in AI that makes decisions, creates marketing plans, researches products, and tells you exactly what to do to make money.</p>
+  <div class="hero-btns">
+    <a href="/wizard" class="btn-primary">🚀 Start Free Trial</a>
+    <a href="/login" class="btn-secondary">Sign In</a>
+  </div>
+  <p style="margin-top:1.5rem; font-size:0.85rem; color:#64748b;">14-day free trial · No credit card needed · Setup in 60 seconds</p>
+</div>
+
+<div class="lp">
+  <div class="features">
+    <div class="feature">
+      <div class="icon">🤖</div>
+      <h3>AI CEO Decision Engine</h3>
+      <p>Ask anything — "What should I sell?" or "How do I make more money?" — and get specific, actionable answers based on your real data.</p>
     </div>
-    
-    <div class="mt-5">
-        <h3>Why pay $59 when others charge $99?</h3>
-        <p class="text-muted">Our AI does the work of a full team - so you don't have to pay for one.</p>
+    <div class="feature">
+      <div class="icon">📦</div>
+      <h3>Order Management</h3>
+      <p>Track every order from placement to delivery. Auto-fulfill with one click — emails your supplier and notifies your customer automatically.</p>
     </div>
-    
-    <div class="row mt-5">
-        <div class="col-md-4">
-            <h5>🤖 AI Powered</h5>
-            <p class="text-muted">The only platform with an AI CEO that makes decisions for you</p>
-        </div>
-        <div class="col-md-4">
-            <h5>⚡ Auto-Fulfill</h5>
-            <p class="text-muted">One click to auto-email supplier AND customer with tracking</p>
-        </div>
-        <div class="col-md-4">
-            <h5>💰 Save Money</h5>
-            <p class="text-muted">Free forever - compared to $20-99/month for competitors</p>
-        </div>
+    <div class="feature">
+      <div class="icon">🔍</div>
+      <h3>Product Research</h3>
+      <p>AI analyzes any niche — profit potential, target audience, competition, best marketing angles. Know before you invest.</p>
     </div>
+    <div class="feature">
+      <div class="icon">📊</div>
+      <h3>Business Analytics</h3>
+      <p>Revenue, top products, order trends — all in one dashboard. Know exactly what's working and what isn't.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">📣</div>
+      <h3>AI Ad Generator</h3>
+      <p>Generate high-converting Facebook, Instagram, and TikTok ads for any product in seconds.</p>
+    </div>
+    <div class="feature">
+      <div class="icon">🐙</div>
+      <h3>OpenClaw Bot</h3>
+      <p>Connect your own OpenClaw AI assistant for even deeper business intelligence and automation.</p>
+    </div>
+  </div>
+
+  <div class="pricing">
+    <h2>Simple, Transparent Pricing</h2>
+    <div class="price">$49<span>/month</span></div>
+    <p style="color:#16a34a; font-weight:600;">vs competitors charging $27–$99/month with no AI</p>
+    <ul>
+      <li>AI CEO with unlimited decisions</li>
+      <li>Unlimited orders, products, suppliers</li>
+      <li>Auto-fulfillment & customer notifications</li>
+      <li>Product research & niche analysis</li>
+      <li>AI ad & email generator</li>
+      <li>OpenClaw bot integration</li>
+      <li>14-day free trial</li>
+    </ul>
+    <a href="/wizard" class="btn-primary" style="font-size:1.1rem; padding:1rem 3rem;">Start Free Trial →</a>
+  </div>
+
+  <div class="cta">
+    <h2>Ready to Let AI Run Your Business?</h2>
+    <p style="color:#64748b; margin-bottom:2rem;">Join dropshippers who let the AI CEO do the heavy lifting.</p>
+    <a href="/wizard" class="btn-primary" style="font-size:1.15rem; padding:1rem 3rem;">🚀 Get Started Free</a>
+  </div>
 </div>
 {% endblock %}

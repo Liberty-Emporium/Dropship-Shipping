@@ -10,10 +10,10 @@
     "volume": "/data"
   },
   "environmentVariables": [
+    {"key": "OPENROUTER_API_KEY", "value": ""},
     {"key": "GROQ_API_KEY", "value": ""},
-    {"key": "QWEN_API_KEY", "value": ""},
-    {"key": "STRIPE_SECRET_KEY", "value": ""},
-    {"key": "STRIPE_WEBHOOK_SECRET", "value": ""},
-    {"key": "STRIPE_PRICE_ID", "value": ""}
+    {"key": "SECRET_KEY", "value": ""},
+    {"key": "ADMIN_PASSWORD", "value": "admin1"},
+    {"key": "DATA_DIR", "value": "/data"}
   ]
 }

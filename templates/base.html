@@ -24,10 +24,11 @@
             <!-- Sidebar -->
             <div class="col-md-2 sidebar p-0">
                 <div class="p-3 text-white border-bottom border-secondary">
-                    <h5><i class="bi bi-box-seam"></i> Andy</h5>
+                    <h5><i class="bi bi-box-seam"></i> Dropship AI CEO</h5>
+                    {% if store_slug %}<div style="font-size:0.72rem;color:#94a3b8;margin-top:0.2rem;">{{ store_name }}</div>{% endif %}
                 </div>
                 <nav>
-                    <a href="/" class="{% if request.path == '/' %}active{% endif %}">
+                    <a href="/dashboard" class="{% if request.path in ('/','/dashboard') %}active{% endif %}">
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                     <a href="/orders" class="{% if '/order' in request.path %}active{% endif %}">
@@ -39,23 +40,29 @@
                     <a href="/suppliers" class="{% if request.path == '/suppliers' %}active{% endif %}">
                         <i class="bi bi-building"></i> Suppliers
                     </a>
-                    <a href="/alerts"><i class="bi bi-bell"></i> Alerts</a>
-                    <a href="/profit-calculator"><i class="bi bi-calculator"></i> Profit</a>
                     <a href="/customers"><i class="bi bi-people"></i> Customers</a>
-                    <a href="/shipping" class="{% if request.path == '/shipping' %}active{% endif %}">
-                        <i class="bi bi-truck"></i> Shipping
-                    </a>
                     <a href="/analytics" class="{% if request.path == '/analytics' %}active{% endif %}">
                         <i class="bi bi-graph-up"></i> Analytics
                     </a>
-                    <a href="/settings/pricing" class="{% if '/settings' in request.path %}active{% endif %}">
-                        <i class="bi bi-gear"></i> Settings
-                    </a>
-                    <a href="/research"><i class="bi bi-search"></i> Research</a>
-                    <a href="/marketing"><i class="bi bi-megaphone"></i> Marketing</a>
                     <a href="/ceo" class="{% if request.path == '/ceo' %}active{% endif %}">
                         <i class="bi bi-robot"></i> AI CEO
                     </a>
+                    <a href="/research"><i class="bi bi-search"></i> Research</a>
+                    <a href="/marketing"><i class="bi bi-megaphone"></i> Marketing</a>
+                    <a href="/alerts"><i class="bi bi-bell"></i> Alerts</a>
+                    <a href="/profit-calculator"><i class="bi bi-calculator"></i> Profit Calc</a>
+                    <a href="/shipping"><i class="bi bi-truck"></i> Shipping</a>
+                    <a href="/settings" class="{% if '/settings' in request.path %}active{% endif %}">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                    {% if current_role == 'admin' %}
+                    <a href="/overseer" class="{% if '/overseer' in request.path %}active{% endif %}" style="border-top:1px solid #334155;margin-top:0.5rem;">
+                        <i class="bi bi-eye"></i> Overseer
+                    </a>
+                    {% endif %}
+                    {% if current_user %}
+                    <a href="/logout" style="border-top:1px solid #334155;margin-top:0.5rem;"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                    {% endif %}
                 </nav>
             </div>
             
@@ -79,5 +86,40 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
+
+<!-- ── OpenClaw Floating Bot Panel ── -->
+<style>
+  #ocFloatBtn{position:fixed;bottom:1.5rem;right:1.5rem;z-index:8000;background:#7c3aed;color:white;border:none;width:52px;height:52px;border-radius:50%;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 16px rgba(124,58,237,0.5);display:none;align-items:center;justify-content:center;}
+  #ocFloatBtn:hover{transform:scale(1.1);}
+  #ocPanel{position:fixed;bottom:5rem;right:1.5rem;z-index:8001;width:340px;background:#0f172a;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;flex-direction:column;overflow:hidden;border:1px solid #1e293b;}
+  #ocPanelHeader{background:#1e1b4b;padding:0.75rem 1rem;display:flex;align-items:center;justify-content:space-between;}
+  #ocPanelHeader span{font-size:0.9rem;font-weight:700;color:#e2e8f0;}
+  #ocPanelHeader button{background:none;border:none;color:#94a3b8;font-size:1.1rem;cursor:pointer;}
+  #ocMsgs{height:280px;overflow-y:auto;padding:0.75rem;display:flex;flex-direction:column;gap:0.5rem;}
+  .oc-msg{max-width:85%;padding:0.5rem 0.75rem;border-radius:10px;font-size:0.82rem;line-height:1.4;word-wrap:break-word;}
+  .oc-msg.user{background:#7c3aed;color:white;align-self:flex-end;border-bottom-right-radius:3px;}
+  .oc-msg.bot{background:#1e293b;color:#e2e8f0;align-self:flex-start;border-bottom-left-radius:3px;}
+  .oc-msg.thinking{background:#1e293b;color:#64748b;align-self:flex-start;font-style:italic;}
+  #ocInputRow{display:flex;border-top:1px solid #1e293b;}
+  #ocInputRow input{flex:1;padding:0.65rem 0.75rem;background:#0f172a;border:none;color:#fff;font-size:0.85rem;outline:none;}
+  #ocInputRow button{background:#7c3aed;color:white;border:none;padding:0.65rem 1rem;font-size:0.85rem;font-weight:600;cursor:pointer;}
+  #ocInputRow button:disabled{opacity:0.5;}
+</style>
+<button id="ocFloatBtn" onclick="ocToggle()" title="Chat with AI CEO">🐙</button>
+<div id="ocPanel">
+  <div id="ocPanelHeader"><span>🐙 Dropship AI Assistant</span><button onclick="ocToggle()">✕</button></div>
+  <div id="ocMsgs"></div>
+  <div id="ocInputRow">
+    <input type="text" id="ocInput" placeholder="Ask your AI CEO..." onkeydown="if(event.key==='Enter'){event.preventDefault();ocSend();}">
+    <button id="ocSendBtn" onclick="ocSend()">Send</button>
+  </div>
+</div>
+<script>
+var ocHistory=[], ocOpen=false;
+fetch('/api/bot/config').then(r=>r.json()).then(d=>{ if(d.token_set&&d.gateway_url) document.getElementById('ocFloatBtn').style.display='flex'; }).catch(()=>{});
+function ocToggle(){ ocOpen=!ocOpen; document.getElementById('ocPanel').style.display=ocOpen?'flex':'none'; if(ocOpen){ if(!document.getElementById('ocMsgs').children.length) ocAddMsg('bot','Hi! I am your Dropship AI CEO. Ask me about products, marketing, pricing, or how to grow your business.'); setTimeout(()=>document.getElementById('ocInput').focus(),100); } }
+function ocAddMsg(role,text){ var msgs=document.getElementById('ocMsgs'); var d=document.createElement('div'); d.className='oc-msg '+role; d.textContent=text; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d; }
+function ocSend(){ var input=document.getElementById('ocInput'); var btn=document.getElementById('ocSendBtn'); var msg=input.value.trim(); if(!msg) return; input.value=''; btn.disabled=true; ocAddMsg('user',msg); var thinking=ocAddMsg('thinking','… thinking'); fetch('/api/bot/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,history:ocHistory})}).then(r=>r.json()).then(d=>{ thinking.remove(); var reply=d.reply||d.error||'No response'; ocAddMsg('bot',reply); ocHistory.push({role:'user',content:msg},{role:'assistant',content:reply}); if(ocHistory.length>20) ocHistory=ocHistory.slice(-20); btn.disabled=false; }).catch(e=>{ thinking.remove(); ocAddMsg('bot','Error: '+e); btn.disabled=false; }); }
+</script>
 </body>
 </html>

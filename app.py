@@ -9,9 +9,19 @@ import os, json, sqlite3, hashlib, uuid, datetime, functools
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dropship-secret-2026')
 
-DATA_DIR      = os.environ.get('DATA_DIR', '/data')
+# Use /data if available and writable, fallback to local ./data directory
+_data_pref = os.environ.get('DATA_DIR', '/data')
+try:
+    os.makedirs(_data_pref, exist_ok=True)
+    # Test write
+    _test = os.path.join(_data_pref, '.write_test')
+    open(_test, 'w').close(); os.remove(_test)
+    DATA_DIR = _data_pref
+except Exception:
+    DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+    os.makedirs(DATA_DIR, exist_ok=True)
+
 CUSTOMERS_DIR = os.path.join(DATA_DIR, 'customers')
-os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(CUSTOMERS_DIR, exist_ok=True)
 
 ADMIN_USER  = os.environ.get('ADMIN_USER', 'admin')

@@ -324,6 +324,17 @@ def start_trial():
         if not store_name or not contact_email:
             flash('Store name and email are required.', 'error')
             return redirect(url_for('wizard'))
+
+        # Check for duplicate email across all stores
+        for existing in list_client_stores():
+            existing_slug = existing.get('slug','')
+            users_check = os.path.join(CUSTOMERS_DIR, existing_slug, 'users.json')
+            if os.path.exists(users_check):
+                existing_users = load_json(users_check, {})
+                if contact_email in existing_users:
+                    flash(f'An account with {contact_email} already exists. Please sign in instead.', 'error')
+                    return redirect(url_for('login'))
+
         slug = slugify(store_name)
         base_slug = slug; counter = 1
         while os.path.exists(os.path.join(CUSTOMERS_DIR, slug)):

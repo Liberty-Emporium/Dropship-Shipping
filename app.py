@@ -4,6 +4,21 @@ Full multi-tenant dropshipping platform with AI CEO powered by OpenRouter
 """
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g
+
+import time as _rl_time
+from collections import defaultdict as _defaultdict
+_rate_store = _defaultdict(list)
+_RATE_WINDOW = 60
+_RATE_MAX = 10
+
+def _check_login_rate(ip):
+    now = _rl_time.time()
+    _rate_store[ip] = [t for t in _rate_store[ip] if now - t < _RATE_WINDOW]
+    if len(_rate_store[ip]) >= _RATE_MAX:
+        return False
+    _rate_store[ip].append(now)
+    return True
+
 import os, json, sqlite3, hashlib, uuid, datetime, functools
 
 # ============================================================
@@ -1039,6 +1054,18 @@ def track(metric, value=1, slug=None):
 def _start_timer():
     from flask import g
     g._start = _t.time()
+
+
+@app.after_request
+def _add_security_headers(response):
+    """Security headers on every response."""
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    if 'Content-Security-Policy' not in response.headers:
+        response.headers['Content-Security-Policy'] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;"
+    return response
 
 @app.after_request
 def _log_req(response):

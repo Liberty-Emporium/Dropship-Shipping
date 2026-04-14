@@ -1,5 +1,5 @@
 """
-Dropship AI CEO - Multi-Tenant SaaS Platform
+Jay's Dropship Shipping Ran By AI - Multi-Tenant SaaS Platform
 Full multi-tenant dropshipping platform with AI CEO powered by OpenRouter
 """
 
@@ -27,7 +27,7 @@ os.makedirs(CUSTOMERS_DIR, exist_ok=True)
 ADMIN_USER  = os.environ.get('ADMIN_USER', 'admin')
 ADMIN_PASS  = os.environ.get('ADMIN_PASSWORD', 'admin1')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'jay@libertyemporium.com')
-APP_NAME    = os.environ.get('APP_NAME', 'Dropship AI CEO')
+APP_NAME    = os.environ.get('APP_NAME', "Jay's Dropship Shipping Ran By AI")
 
 # ── DB ────────────────────────────────────────────────────────────────────────
 DB_FILE = os.path.join(DATA_DIR, 'dropship.db')
@@ -835,7 +835,7 @@ def api_bot_chat():
         payload = json.dumps({'model':model,'messages':messages,'stream':False}).encode()
         req = ur.Request('https://openrouter.ai/api/v1/chat/completions', data=payload,
             headers={'Authorization':f'Bearer {api_key}','Content-Type':'application/json',
-                     'HTTP-Referer':'https://dropship-ai.app','X-Title':'Dropship AI CEO'})
+                     'HTTP-Referer':'https://dropship-ai.app','X-Title':"Jay\'s Dropship Shipping Ran By AI"})
         with ur.urlopen(req, timeout=90) as resp:
             result = json.loads(resp.read())
         return jsonify({'reply': result['choices'][0]['message']['content']})

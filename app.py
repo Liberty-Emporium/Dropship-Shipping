@@ -1125,6 +1125,214 @@ def _log_req(response):
 # ============================================================
 # SEO — Sitemap + Robots.txt
 # ============================================================
+# ── AI Product Sourcer ────────────────────────────────────────────────────────
+@app.route('/source')
+@login_required
+def sourcer_page():
+    return render_template('sourcer.html', last_query=request.args.get('q',''), **ctx())
+
+@app.route('/api/source-products', methods=['POST'])
+@login_required
+def api_source_products():
+    """AI searches for wholesale deals and returns structured product data."""
+    import datetime as _dt
+    data = request.get_json()
+    niche = data.get('niche', '').strip()
+    if not niche:
+        return jsonify({'error': 'Please enter a product to search for.'}), 400
+
+    key = _get_ai_key(active_slug())
+    if not key:
+        return jsonify({'error': 'Add your OpenRouter API key in Settings first.'}), 400
+
+    model = _get_ai_model(active_slug())
+
+    prompt = f"""You are an expert dropshipping sourcing agent. The user wants to sell: {niche}
+
+Search your knowledge for real wholesale suppliers and return sourcing data.
+
+Return ONLY valid JSON in this exact format:
+{{
+  "products": [
+    {{
+      "name": "Product name",
+      "description": "Brief description",
+      "cost": 12.50,
+      "sell_price": 34.99,
+      "supplier": "AliExpress / DHgate / Faire / etc",
+      "supplier_url": "https://...",
+      "sku": "AUTO-001",
+      "weight": 0.5,
+      "stock": 100,
+      "shipping_estimate": "7-14 days from China",
+      "category": "Shoes"
+    }}
+  ],
+  "suppliers": [
+    {{
+      "name": "Supplier name",
+      "platform": "AliExpress / DHgate / Wholesale platform",
+      "website": "https://...",
+      "description": "What they specialize in",
+      "min_order": "$50",
+      "shipping": "7-14 days",
+      "rating": "4.8"
+    }}
+  ],
+  "summary": "2-3 sentence market analysis: profit potential, competition level, best platforms to sell on"
+}}
+
+Rules:
+- Return 5-8 products with realistic wholesale prices
+- Include 2-4 real supplier platforms (AliExpress, DHgate, Alibaba, Faire, etc.)
+- Cost should be 25-50% of sell price for good margins
+- Be specific with real product names and prices
+- Return ONLY the JSON, no other text"""
+
+    try:
+        import urllib.request as _ur
+        payload = json.dumps({
+            'model': model,
+            'messages': [{'role': 'user', 'content': prompt}],
+            'max_tokens': 2000
+        }).encode()
+        req = _ur.Request(
+            'https://openrouter.ai/api/v1/chat/completions',
+            data=payload,
+            headers={
+                'Authorization': f'Bearer {key}',
+                'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://libertyemporium.com',
+                'X-Title': 'AI Auto Dropshipping'
+            }
+        )
+        with _ur.urlopen(req, timeout=45) as resp:
+            result = json.loads(resp.read())
+            text = result['choices'][0]['message']['content'].strip()
+
+        # Extract JSON from response
+        if '```json' in text:
+            text = text.split('```json')[1].split('```')[0].strip()
+        elif '```' in text:
+            text = text.split('```')[1].split('```')[0].strip()
+
+        sourced = json.loads(text)
+        return jsonify(sourced)
+
+    except json.JSONDecodeError as e:
+        return jsonify({'error': f'AI returned invalid data. Try a different model in Settings.'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Sourcing failed: {str(e)}'}), 500
+
+@app.route('/api/source-products/add-product', methods=['POST'])
+@login_required
+def api_add_sourced_product():
+    """Add a single sourced product to the products list."""
+    import datetime as _dt
+    data = request.get_json()
+    p = data.get('product', {})
+    if not p or not p.get('name'):
+        return jsonify({'error': 'Invalid product data'}), 400
+
+    slug = active_slug()
+    products = load_products(slug)
+    new_id = f"PRD-{len(products)+1:05d}"
+    products.append({
+        'id': new_id,
+        'name': p.get('name', 'Unknown'),
+        'sku': p.get('sku', f'SKU-{new_id}'),
+        'supplier': p.get('supplier', ''),
+        'cost': float(p.get('cost', 0)),
+        'price': float(p.get('sell_price', 0)),
+        'weight': float(p.get('weight', 0.5)),
+        'stock': int(p.get('stock', 50)),
+        'description': p.get('description', ''),
+        'category': p.get('category', ''),
+        'supplier_url': p.get('supplier_url', ''),
+        'shipping_estimate': p.get('shipping_estimate', ''),
+        'source': 'AI Sourcer',
+        'created_at': _dt.datetime.now().isoformat()
+    })
+    save_products(products, slug)
+    return jsonify({'success': True, 'id': new_id})
+
+@app.route('/api/source-products/add-supplier', methods=['POST'])
+@login_required
+def api_add_sourced_supplier():
+    """Add a supplier to the suppliers list."""
+    import datetime as _dt
+    data = request.get_json()
+    s = data.get('supplier', {})
+    if not s or not s.get('name'):
+        return jsonify({'error': 'Invalid supplier data'}), 400
+
+    slug = active_slug()
+    suppliers = load_suppliers(slug)
+    # Don't add duplicates
+    if any(x.get('name','').lower() == s['name'].lower() for x in suppliers):
+        return jsonify({'success': True, 'note': 'Already exists'})
+    new_id = f"SUP-{len(suppliers)+1:05d}"
+    suppliers.append({
+        'id': new_id,
+        'name': s.get('name', ''),
+        'email': s.get('email', ''),
+        'phone': s.get('phone', ''),
+        'address': s.get('address', ''),
+        'website': s.get('website', ''),
+        'platform': s.get('platform', ''),
+        'min_order': s.get('min_order', ''),
+        'shipping': s.get('shipping', ''),
+        'rating': s.get('rating', ''),
+        'notes': s.get('description', '') + ' | ' + s.get('notes', ''),
+        'source': 'AI Sourcer',
+        'created_at': _dt.datetime.now().isoformat()
+    })
+    save_suppliers(suppliers, slug)
+    return jsonify({'success': True, 'id': new_id})
+
+@app.route('/api/source-products/add-all', methods=['POST'])
+@login_required
+def api_add_all_sourced():
+    """Add all sourced products and suppliers at once."""
+    import datetime as _dt
+    data = request.get_json()
+    slug = active_slug()
+    products_added = 0
+    suppliers_added = 0
+
+    for p in data.get('products', []):
+        if not p.get('name'): continue
+        products = load_products(slug)
+        new_id = f"PRD-{len(products)+1:05d}"
+        products.append({
+            'id': new_id, 'name': p.get('name',''), 'sku': p.get('sku', f'SKU-{new_id}'),
+            'supplier': p.get('supplier',''), 'cost': float(p.get('cost',0)),
+            'price': float(p.get('sell_price',0)), 'weight': float(p.get('weight',0.5)),
+            'stock': int(p.get('stock',50)), 'description': p.get('description',''),
+            'supplier_url': p.get('supplier_url',''), 'source': 'AI Sourcer',
+            'created_at': _dt.datetime.now().isoformat()
+        })
+        save_products(products, slug)
+        products_added += 1
+
+    for s in data.get('suppliers', []):
+        if not s.get('name'): continue
+        suppliers = load_suppliers(slug)
+        if any(x.get('name','').lower() == s['name'].lower() for x in suppliers):
+            continue
+        new_id = f"SUP-{len(suppliers)+1:05d}"
+        suppliers.append({
+            'id': new_id, 'name': s.get('name',''), 'website': s.get('website',''),
+            'platform': s.get('platform',''), 'min_order': s.get('min_order',''),
+            'shipping': s.get('shipping',''), 'rating': s.get('rating',''),
+            'notes': s.get('description',''), 'source': 'AI Sourcer',
+            'created_at': _dt.datetime.now().isoformat()
+        })
+        save_suppliers(suppliers, slug)
+        suppliers_added += 1
+
+    return jsonify({'success': True, 'products_added': products_added, 'suppliers_added': suppliers_added})
+
 @app.route('/sitemap.xml')
 def sitemap():
     """Auto-generated XML sitemap for SEO."""

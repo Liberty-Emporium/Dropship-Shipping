@@ -8,10 +8,10 @@
     <meta name="author" content="Jay Alexander">
     <meta name="robots" content="index, follow">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Dropship Shipping — Automated Dropshipping CRM">
+    <meta property="og:title" content="AI Auto Dropshipping — Automated Dropshipping Platform">
     <meta property="og:description" content="Automate your dropshipping business with AI. Manage orders, suppliers, and customers automatically. One-time $299 setup.">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Dropship Shipping — Automated Dropshipping CRM">
+    <meta name="twitter:title" content="AI Auto Dropshipping — Automated Dropshipping Platform">
     <meta name="twitter:description" content="Automate your dropshipping business with AI. Manage orders, suppliers, and customers automatically. One-time $299 setup.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Andy Shipping{% endblock %}</title>
@@ -55,7 +55,7 @@
             <!-- Sidebar -->
             <div class="col-md-2 sidebar p-0">
                 <div class="p-3 text-white border-bottom border-secondary">
-                    <h5><i class="bi bi-box-seam"></i> Jay's Jay's Dropship Shipping Ran By AI Ran By AI</h5>
+                    <h5><i class="bi bi-box-seam"></i> AI Auto Dropshipping</h5>
                     {% if store_slug %}<div style="font-size:0.72rem;color:#94a3b8;margin-top:0.2rem;">{{ store_name }}</div>{% endif %}
                 </div>
                 <nav>
@@ -145,7 +145,7 @@
 <button id="aiFloatBtn" onclick="aiToggle()" title="AI CEO Assistant">&#x1F916;</button>
 <input type="file" id="aiFileInput" accept="image/*" style="display:none" onchange="aiHandleImage(this)">
 <div id="aiPanel">
-  <div id="aiPanelHeader"><span>&#x1F916; Jay's Jay's Dropship Shipping Ran By AI Ran By AI</span><button onclick="aiToggle()">&#x2715;</button></div>
+  <div id="aiPanelHeader"><span>&#x1F916; AI Auto Dropshipping</span><button onclick="aiToggle()">&#x2715;</button></div>
   <div id="aiMsgs"></div>
   <div id="aiImgPreview"><span id="aiImgName"></span><button onclick="aiClearImage()">&#x2715;</button></div>
   <div id="aiInputRow">
@@ -156,7 +156,7 @@
 </div>
 <script>
 var aiHistory=[],aiOpen=false,aiImgB64=null,aiImgMime='image/jpeg';
-function aiToggle(){aiOpen=!aiOpen;document.getElementById('aiPanel').style.display=aiOpen?'flex':'none';if(aiOpen){if(!document.getElementById('aiMsgs').children.length)aiAddMsg('bot','Hi! I am your Jay's Jay's Dropship Shipping Ran By AI Ran By AI. Ask me about products, marketing, pricing, or how to grow your business.');setTimeout(function(){document.getElementById('aiInput').focus();},100);}}
+function aiToggle(){aiOpen=!aiOpen;document.getElementById('aiPanel').style.display=aiOpen?'flex':'none';if(aiOpen){if(!document.getElementById('aiMsgs').children.length)aiAddMsg('bot','Hi! I am your AI Auto Dropshipping. Ask me about products, marketing, pricing, or how to grow your business.');setTimeout(function(){document.getElementById('aiInput').focus();},100);}}
 function aiAddMsg(role,text){var msgs=document.getElementById('aiMsgs');var d=document.createElement('div');d.className='ai-msg '+role;d.textContent=text;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
 function aiHandleImage(input){var file=input.files[0];if(!file)return;aiImgMime=file.type||'image/jpeg';var reader=new FileReader();reader.onload=function(e){aiImgB64=e.target.result.split(',')[1];document.getElementById('aiImgName').textContent='[img] '+file.name;document.getElementById('aiImgPreview').style.display='flex';};reader.readAsDataURL(file);input.value='';}
 function aiClearImage(){aiImgB64=null;document.getElementById('aiImgPreview').style.display='none';document.getElementById('aiImgName').textContent='';}

@@ -57,6 +57,7 @@
 </div>
 
 <script>
+{% raw %}
 function calculate() {
     const cost = document.getElementById('test-cost').value;
     fetch('/api/calculate-price', {
@@ -72,5 +73,6 @@ function calculate() {
         `;
     });
 }
+{% endraw %}
 </script>
 {% endblock %}

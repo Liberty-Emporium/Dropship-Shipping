@@ -153,12 +153,14 @@
   </div>
 </div>
 <script>
+{% raw %}
 var aiHistory=[],aiOpen=false,aiImgB64=null,aiImgMime='image/jpeg';
 function aiToggle(){aiOpen=!aiOpen;document.getElementById('aiPanel').style.display=aiOpen?'flex':'none';if(aiOpen){if(!document.getElementById('aiMsgs').children.length)aiAddMsg('bot','Hi! I am your AI Auto Dropshipping. Ask me about products, marketing, pricing, or how to grow your business.');setTimeout(function(){document.getElementById('aiInput').focus();},100);}}
 function aiAddMsg(role,text){var msgs=document.getElementById('aiMsgs');var d=document.createElement('div');d.className='ai-msg '+role;d.textContent=text;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
 function aiHandleImage(input){var file=input.files[0];if(!file)return;aiImgMime=file.type||'image/jpeg';var reader=new FileReader();reader.onload=function(e){aiImgB64=e.target.result.split(',')[1];document.getElementById('aiImgName').textContent='[img] '+file.name;document.getElementById('aiImgPreview').style.display='flex';};reader.readAsDataURL(file);input.value='';}
 function aiClearImage(){aiImgB64=null;document.getElementById('aiImgPreview').style.display='none';document.getElementById('aiImgName').textContent='';}
 function aiSend(){var input=document.getElementById('aiInput');var btn=document.getElementById('aiSendBtn');var msg=input.value.trim();if(!msg&&!aiImgB64)return;input.value='';btn.disabled=true;aiAddMsg('user',msg||'[image attached]');var imgB64=aiImgB64;aiClearImage();var thinking=aiAddMsg('thinking','... thinking');var payload={message:msg,history:aiHistory};if(imgB64){payload.image=imgB64;payload.image_mime=aiImgMime;}fetch('/api/bot/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json();}).then(function(d){thinking.remove();var reply=d.reply||d.error||'No response';aiAddMsg('bot',reply);aiHistory.push({role:'user',content:msg||'[image]'},{role:'assistant',content:reply});if(aiHistory.length>20)aiHistory=aiHistory.slice(-20);btn.disabled=false;}).catch(function(e){thinking.remove();aiAddMsg('bot','Error: '+e);btn.disabled=false;});}
+{% endraw %}
 </script>
 </body>
 </html>

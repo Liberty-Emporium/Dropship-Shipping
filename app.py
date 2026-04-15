@@ -1225,6 +1225,15 @@ def forgot_password():
         return redirect(url_for('forgot_password'))
     return render_template('forgot_password.html', **ctx())
 
+@app.route('/debug-error')
+def debug_error():
+    import traceback
+    try:
+        return render_template('login.html', **ctx())
+    except Exception as e:
+        return '<pre>' + traceback.format_exc() + '</pre>', 500
+
+
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     import os as _os, datetime as _dt

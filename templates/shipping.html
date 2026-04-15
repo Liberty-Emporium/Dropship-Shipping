@@ -38,6 +38,7 @@
 </div>
 
 <script>
+{% raw %}
 function calculateShipping() {
     const weight = parseFloat(document.getElementById('weight').value) || 0;
     const distance = parseFloat(document.getElementById('distance').value) || 0;
@@ -52,5 +53,6 @@ function calculateShipping() {
         document.getElementById('result').textContent = '$' + data.estimated_cost.toFixed(2);
     });
 }
+{% endraw %}
 </script>
 {% endblock %}

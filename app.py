@@ -302,18 +302,20 @@ def ceo_think(prompt, slug=None, context=None):
 
 # ── AI Assistant (OpenRouter) ────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 def _get_ai_key(slug=None):
+    """Get OpenRouter key — checks both old and new config key names."""
     if slug:
         cfg = load_client_config(slug)
-        key = cfg.get('openrouter_api_key','')
+        key = cfg.get('openrouter_key','') or cfg.get('openrouter_api_key','')
         if key: return key
-    return get_config('openrouter_api_key','')
+    return get_config('openrouter_key','') or get_config('openrouter_api_key','') or OPENROUTER_API_KEY
 
 def _get_ai_model(slug=None):
+    """Get AI model — checks both old and new config key names."""
     if slug:
         cfg = load_client_config(slug)
-        m = cfg.get('ai_chat_model','')
+        m = cfg.get('openrouter_model','') or cfg.get('ai_chat_model','')
         if m: return m
-    return get_config('ai_chat_model','openai/gpt-4o-mini')
+    return get_config('openrouter_model','') or get_config('ai_chat_model','') or 'google/gemini-flash-1.5'
 
 # ── Context for templates ──────────────────────────────────────────────────────
 def ctx():

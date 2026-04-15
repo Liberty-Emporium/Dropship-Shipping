@@ -1,5 +1,5 @@
 """
-Jay's Dropship Shipping Ran By AI - Multi-Tenant SaaS Platform
+AI Auto Dropshipping - Multi-Tenant SaaS Platform
 Full multi-tenant dropshipping platform with AI CEO powered by OpenRouter
 """
 
@@ -102,7 +102,7 @@ os.makedirs(CUSTOMERS_DIR, exist_ok=True)
 ADMIN_USER  = os.environ.get('ADMIN_USER', 'admin')
 ADMIN_PASS  = os.environ.get('ADMIN_PASSWORD', 'admin1')
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'jay@libertyemporium.com')
-APP_NAME    = os.environ.get('APP_NAME', "Jay's Dropship Shipping Ran By AI")
+APP_NAME    = os.environ.get('APP_NAME', 'AI Auto Dropshipping')
 
 # ── DB ────────────────────────────────────────────────────────────────────────
 DB_FILE = os.path.join(DATA_DIR, 'dropship.db')

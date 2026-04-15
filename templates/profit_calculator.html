@@ -38,6 +38,7 @@
 </div>
 
 <script>
+{% raw %}
 function calculate() {
     fetch('/api/calculate-profit', {
         method: 'POST',
@@ -60,5 +61,6 @@ function calculate() {
         `;
     });
 }
+{% endraw %}
 </script>
 {% endblock %}

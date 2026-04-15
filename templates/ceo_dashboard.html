@@ -119,6 +119,7 @@
 </div>
 
 <script>
+{% raw %}
 // Load stats on page load
 fetch('/api/business/status').then(r => r.json()).then(data => {
     document.getElementById('business-stats').innerHTML = `
@@ -164,5 +165,6 @@ function askDecision() {
         document.getElementById('ai-response').innerHTML = html;
     });
 }
+{% endraw %}
 </script>
 {% endblock %}

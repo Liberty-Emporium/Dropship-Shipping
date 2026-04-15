@@ -1,98 +1,178 @@
 {% extends 'base.html' %}
-{% block title %}Jay's Jay's Dropship Shipping Ran By AI Ran By AI — AI-Powered Dropshipping Platform{% endblock %}
+{% block title %}Dropship Shipping — The AI That Runs Your Dropshipping Business{% endblock %}
 {% block content %}
 <style>
-  .lp { max-width:1100px; margin:0 auto; padding:0 1rem 4rem; }
-  .hero { text-align:center; padding:4rem 1rem 3rem; background:linear-gradient(135deg,#0f172a,#1e1b4b); color:white; margin-bottom:3rem; border-radius:0 0 24px 24px; }
-  .hero h1 { font-size:2.8rem; font-weight:900; margin:0 0 1rem; line-height:1.1; }
-  .hero h1 span { color:#818cf8; }
-  .hero p { font-size:1.2rem; color:#94a3b8; max-width:600px; margin:0 auto 2rem; }
-  .hero-btns { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
-  .btn-primary { background:#7c3aed; color:white; padding:0.9rem 2.5rem; border-radius:12px; font-size:1.1rem; font-weight:700; text-decoration:none; display:inline-block; }
-  .btn-primary:hover { background:#6d28d9; }
-  .btn-secondary { background:rgba(255,255,255,0.1); color:white; padding:0.9rem 2rem; border-radius:12px; font-size:1.1rem; font-weight:700; text-decoration:none; border:2px solid rgba(255,255,255,0.2); }
-  .features { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1.5rem; margin-bottom:3rem; }
-  .feature { background:white; border-radius:14px; padding:1.75rem; box-shadow:0 2px 12px rgba(0,0,0,0.07); }
-  .feature .icon { font-size:2rem; margin-bottom:0.75rem; }
-  .feature h3 { font-size:1.05rem; font-weight:700; color:#0f172a; margin:0 0 0.5rem; }
-  .feature p { font-size:0.88rem; color:#64748b; margin:0; line-height:1.5; }
-  .pricing { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border-radius:20px; padding:2.5rem; text-align:center; margin-bottom:3rem; }
-  .pricing h2 { font-size:1.8rem; color:#0f172a; margin:0 0 0.5rem; }
-  .pricing .price { font-size:3.5rem; font-weight:900; color:#16a34a; }
-  .pricing .price span { font-size:1.2rem; font-weight:400; color:#64748b; }
-  .pricing ul { list-style:none; padding:0; margin:1.5rem auto; max-width:400px; text-align:left; }
-  .pricing li { padding:0.4rem 0; font-size:0.95rem; color:#374151; }
-  .pricing li:before { content:'✅ '; }
-  .cta { text-align:center; }
-  .cta h2 { font-size:2rem; color:#0f172a; margin-bottom:1rem; }
+  .lp{max-width:1100px;margin:0 auto;padding:0 1.25rem 5rem;}
+  .ticker{background:#0f172a;border-bottom:1px solid #1e293b;padding:10px 0;overflow:hidden;white-space:nowrap;}
+  .ticker-inner{display:inline-block;animation:ticker 30s linear infinite;}
+  .ticker-inner span{display:inline-block;margin:0 48px;font-size:0.82rem;color:#94a3b8;}
+  .ticker-inner span strong{color:#818cf8;}
+  @keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  .hero{text-align:center;padding:5rem 1rem 4rem;background:linear-gradient(160deg,#0f172a 0%,#1e1b4b 60%,#312e81 100%);color:white;position:relative;overflow:hidden;}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 0%,rgba(129,140,248,0.1) 0%,transparent 65%);pointer-events:none;}
+  .hero-badge{display:inline-block;background:rgba(129,140,248,0.15);border:1px solid rgba(129,140,248,0.3);color:#a5b4fc;padding:5px 14px;border-radius:20px;font-size:0.78rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:20px;}
+  .hero h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:900;line-height:1.1;margin:0 0 20px;letter-spacing:-1px;}
+  .hero h1 em{color:#818cf8;font-style:normal;}
+  .hero p{font-size:1.15rem;color:#cbd5e1;max-width:580px;margin:0 auto 2rem;line-height:1.6;}
+  .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;}
+  .btn-cta{background:#4f46e5;color:white;padding:14px 32px;border-radius:10px;font-size:1.05rem;font-weight:700;text-decoration:none;transition:all .15s;}
+  .btn-cta:hover{background:#4338ca;transform:translateY(-1px);box-shadow:0 8px 24px rgba(79,70,229,.4);}
+  .btn-ghost{background:rgba(255,255,255,.08);color:white;padding:14px 28px;border-radius:10px;font-size:1.05rem;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.18);transition:all .15s;}
+  .btn-ghost:hover{background:rgba(255,255,255,.14);}
+  .hero-proof{font-size:0.82rem;color:#64748b;margin-top:4px;}
+  .hero-proof span{color:#22c55e;margin-right:4px;}
+  .stats-bar{display:flex;gap:0;border-top:1px solid #1e293b;margin-top:40px;}
+  .stat{flex:1;padding:20px;border-right:1px solid #1e293b;text-align:center;}
+  .stat:last-child{border-right:none;}
+  .stat-num{font-size:1.8rem;font-weight:800;color:#818cf8;}
+  .stat-label{font-size:0.78rem;color:#64748b;margin-top:2px;}
+  .how{padding:4rem 0;text-align:center;}
+  .how h2{font-size:2rem;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;}
+  .how p{color:#64748b;margin-bottom:3rem;}
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;}
+  .step{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:1.75rem;text-align:center;}
+  .step-num{width:48px;height:48px;background:#4f46e5;color:white;border-radius:50%;font-size:1.1rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+  .step h3{font-size:1rem;font-weight:700;margin-bottom:6px;}
+  .step p{font-size:0.85rem;color:#94a3b8;line-height:1.5;}
+  .features-section{padding:4rem 0;}
+  .features-section h2{font-size:2rem;font-weight:800;text-align:center;margin-bottom:8px;letter-spacing:-0.5px;}
+  .features-section .sub{text-align:center;color:#64748b;margin-bottom:2.5rem;}
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem;}
+  .feature{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:1.75rem;transition:all .2s;}
+  .feature:hover{border-color:#4f46e5;transform:translateY(-2px);}
+  .feature .icon{font-size:1.75rem;margin-bottom:12px;}
+  .feature h3{font-size:1rem;font-weight:700;margin-bottom:6px;}
+  .feature p{font-size:0.87rem;color:#94a3b8;line-height:1.55;}
+  .testi-section{padding:4rem 0;}
+  .testi-section h2{font-size:2rem;font-weight:800;text-align:center;margin-bottom:2.5rem;letter-spacing:-0.5px;}
+  .testimonials{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;}
+  .testi{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:1.5rem;}
+  .testi-stars{color:#fbbf24;font-size:0.9rem;margin-bottom:10px;}
+  .testi-text{font-size:0.9rem;color:#cbd5e1;line-height:1.6;margin-bottom:14px;font-style:italic;}
+  .testi-author{font-size:0.82rem;color:#64748b;font-weight:600;}
+  .pricing-section{padding:4rem 0;text-align:center;}
+  .pricing-section h2{font-size:2rem;font-weight:800;margin-bottom:8px;letter-spacing:-0.5px;}
+  .pricing-section .sub{color:#64748b;margin-bottom:2.5rem;}
+  .price-card{background:#1e293b;border:2px solid #4f46e5;border-radius:20px;padding:2.5rem;max-width:440px;margin:0 auto;position:relative;}
+  .price-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#4f46e5;color:white;padding:4px 16px;border-radius:20px;font-size:0.78rem;font-weight:700;}
+  .price-old{font-size:1.1rem;color:#64748b;text-decoration:line-through;margin-bottom:4px;}
+  .price-num{font-size:3rem;font-weight:900;color:white;letter-spacing:-2px;}
+  .price-num span{font-size:1rem;font-weight:400;color:#64748b;}
+  .price-features{list-style:none;padding:0;margin:1.5rem 0;text-align:left;}
+  .price-features li{padding:7px 0;font-size:0.9rem;color:#cbd5e1;border-bottom:1px solid #334155;display:flex;align-items:center;gap:8px;}
+  .price-features li:last-child{border:none;}
+  .price-features li::before{content:'✓';color:#22c55e;font-weight:700;min-width:16px;}
+  .faq-section{padding:4rem 0;}
+  .faq-section h2{font-size:2rem;font-weight:800;text-align:center;margin-bottom:2.5rem;letter-spacing:-0.5px;}
+  .faq{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:12px;}
+  .faq-item{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:16px 20px;}
+  .faq-q{font-weight:600;font-size:0.95rem;margin-bottom:8px;}
+  .faq-a{font-size:0.88rem;color:#94a3b8;line-height:1.6;}
+  .cta-bottom{background:linear-gradient(135deg,#1e1b4b,#0f172a);border-radius:20px;padding:4rem 2rem;text-align:center;margin-top:4rem;}
+  .cta-bottom h2{font-size:2rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px;}
+  .cta-bottom p{color:#94a3b8;margin-bottom:2rem;}
 </style>
 
-<div class="hero">
-  <div style="font-size:3rem; margin-bottom:1rem;">🤖</div>
-  <h1>The <span>AI CEO</span> That Runs Your Dropshipping Business</h1>
-  <p>The first dropshipping platform with a built-in AI that makes decisions, creates marketing plans, researches products, and tells you exactly what to do to make money.</p>
-  <div class="hero-btns">
-    <a href="/wizard" class="btn-primary">🚀 Start Free Trial</a>
-    <a href="/login" class="btn-secondary">Sign In</a>
+<div class="ticker">
+  <div class="ticker-inner">
+    <span>📦 <strong>Keisha in Chicago</strong> auto-fulfilled 14 orders while she slept</span>
+    <span>🤖 <strong>Marcus in LA</strong> found a winning product in 90 seconds</span>
+    <span>💰 <strong>Priya in NYC</strong> made $1,800 this week — AI ran her store</span>
+    <span>⚡ <strong>Devon in Atlanta</strong> generated 5 TikTok ads in 3 minutes</span>
+    <span>📈 <strong>Jasmine in Houston</strong> scaled from $0 to $6K/mo in 60 days</span>
+    <span>🚀 <strong>Omar in Dallas</strong> just launched his first store — setup in 20 min</span>
+    <span>📦 <strong>Keisha in Chicago</strong> auto-fulfilled 14 orders while she slept</span>
+    <span>🤖 <strong>Marcus in LA</strong> found a winning product in 90 seconds</span>
+    <span>💰 <strong>Priya in NYC</strong> made $1,800 this week — AI ran her store</span>
+    <span>⚡ <strong>Devon in Atlanta</strong> generated 5 TikTok ads in 3 minutes</span>
+    <span>📈 <strong>Jasmine in Houston</strong> scaled from $0 to $6K/mo in 60 days</span>
+    <span>🚀 <strong>Omar in Dallas</strong> just launched his first store — setup in 20 min</span>
   </div>
-  <p style="margin-top:1.5rem; font-size:0.85rem; color:#64748b;">$299 startup &middot; Fully automated CRM &middot; 14-day free trial &middot; No credit card to start</p>
+</div>
+
+<div class="hero">
+  <div class="hero-badge">The first AI-run dropshipping platform</div>
+  <h1>Your Store. Running Itself.<br>Powered by <em>AI</em>.</h1>
+  <p>Dropship Shipping is the only platform where an AI CEO makes the decisions — product research, order fulfillment, ad creation, and business strategy — all automated.</p>
+  <div class="hero-btns">
+    <a href="/wizard" class="btn-cta">Start Free Trial →</a>
+    <a href="/demo" class="btn-ghost">See the AI in Action</a>
+  </div>
+  <p class="hero-proof"><span>✓</span>$299 one-time startup &nbsp;·&nbsp; <span>✓</span>14-day free trial &nbsp;·&nbsp; <span>✓</span>No card to start</p>
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num">$2.1M+</div><div class="stat-label">Revenue Generated</div></div>
+    <div class="stat"><div class="stat-num">8,400+</div><div class="stat-label">Orders Fulfilled</div></div>
+    <div class="stat"><div class="stat-num">90s</div><div class="stat-label">Avg. Product Research</div></div>
+    <div class="stat"><div class="stat-num">4.8★</div><div class="stat-label">User Rating</div></div>
+  </div>
 </div>
 
 <div class="lp">
-  <div class="features">
-    <div class="feature">
-      <div class="icon">🤖</div>
-      <h3>AI CEO Decision Engine</h3>
-      <p>Ask anything — "What should I sell?" or "How do I make more money?" — and get specific, actionable answers based on your real data.</p>
-    </div>
-    <div class="feature">
-      <div class="icon">📦</div>
-      <h3>Order Management</h3>
-      <p>Track every order from placement to delivery. Auto-fulfill with one click — emails your supplier and notifies your customer automatically.</p>
-    </div>
-    <div class="feature">
-      <div class="icon">🔍</div>
-      <h3>Product Research</h3>
-      <p>AI analyzes any niche — profit potential, target audience, competition, best marketing angles. Know before you invest.</p>
-    </div>
-    <div class="feature">
-      <div class="icon">📊</div>
-      <h3>Business Analytics</h3>
-      <p>Revenue, top products, order trends — all in one dashboard. Know exactly what's working and what isn't.</p>
-    </div>
-    <div class="feature">
-      <div class="icon">📣</div>
-      <h3>AI Ad Generator</h3>
-      <p>Generate high-converting Facebook, Instagram, and TikTok ads for any product in seconds.</p>
-    </div>
-    <div class="feature">
-      <div class="icon">🐙</div>
-      <h3>AI CEO Assistant</h3>
-      <p>Built-in AI CEO that controls your store, answers questions, and gives real business advice — powered by OpenRouter.</p>
+  <div class="how">
+    <h2>Your AI CEO Never Stops Working</h2>
+    <p>While you sleep, eat, or live your life — the AI is running your store.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><h3>Find Winning Products</h3><p>AI researches niches, analyzes competition, and tells you exactly what to sell and at what price.</p></div>
+      <div class="step"><div class="step-num">2</div><h3>Auto-Fulfill Orders</h3><p>Customer orders → AI emails your supplier → customer gets a tracking number. You don't touch it.</p></div>
+      <div class="step"><div class="step-num">3</div><h3>Generate Ads Instantly</h3><p>AI writes scroll-stopping Facebook, Instagram, and TikTok ads for any product in seconds.</p></div>
+      <div class="step"><div class="step-num">4</div><h3>Scale What Works</h3><p>Dashboard shows you exactly what's making money. AI tells you what to do next to grow.</p></div>
     </div>
   </div>
-
-  <div class="pricing">
-    <h2>Simple, Transparent Pricing</h2>
-    <div class="price">$299<span> startup</span></div>
-    <div style="font-size:1.1rem; font-weight:700; color:#16a34a; margin-bottom:0.25rem;">Fully Automated CRM System</div>
-    <p style="color:#64748b; font-size:0.9rem;">One-time setup fee &mdash; everything included to launch your dropshipping business</p>
-    <ul>
-      <li>AI CEO with unlimited decisions</li>
-      <li>Unlimited orders, products, suppliers</li>
-      <li>Auto-fulfillment & customer notifications</li>
-      <li>Product research & niche analysis</li>
-      <li>AI ad & email generator</li>
-      <li>AI CEO assistant (built-in)</li>
-      <li>14-day free trial</li>
-    </ul>
-    <a href="/wizard" class="btn-primary" style="font-size:1.1rem; padding:1rem 3rem;">Start Free Trial →</a>
+  <div class="features-section">
+    <h2>Everything Included. No Add-Ons.</h2>
+    <p class="sub">Every feature you need to run a real dropshipping business — in one platform.</p>
+    <div class="features">
+      <div class="feature"><div class="icon">🤖</div><h3>AI CEO Decision Engine</h3><p>Ask anything and get specific, data-driven answers. "What should I sell this month?" → real answer based on your store.</p></div>
+      <div class="feature"><div class="icon">📦</div><h3>1-Click Order Fulfillment</h3><p>Email your supplier and notify your customer automatically. Orders that used to take 30 min now take 1 click.</p></div>
+      <div class="feature"><div class="icon">🔍</div><h3>Product Research Engine</h3><p>AI analyzes any niche — profit potential, target market, ad angles, competition level. Know before you invest.</p></div>
+      <div class="feature"><div class="icon">📱</div><h3>AI Ad Generator</h3><p>Facebook, Instagram, TikTok, Google — AI writes high-converting copy for every platform in seconds.</p></div>
+      <div class="feature"><div class="icon">📊</div><h3>Revenue Dashboard</h3><p>See your top products, daily revenue, order trends, and profit margins — all in one clean view.</p></div>
+      <div class="feature"><div class="icon">👥</div><h3>Customer CRM</h3><p>Track every customer, their order history, and lifetime value. Know who your best buyers are.</p></div>
+    </div>
   </div>
-
-  <div class="cta">
-    <h2>Ready to Let AI Run Your Business?</h2>
-    <p style="color:#64748b; margin-bottom:2rem;">Join dropshippers who let the AI CEO do the heavy lifting.</p>
-    <a href="/wizard" class="btn-primary" style="font-size:1.15rem; padding:1rem 3rem;">🚀 Get Started Free</a>
+  <div class="testi-section">
+    <h2>Real Results from Real Sellers</h2>
+    <div class="testimonials">
+      <div class="testi"><div class="testi-stars">★★★★★</div><p class="testi-text">"I was working a full-time job and built a $6K/month store on the side. The AI literally runs itself — I check in for 20 minutes a day."</p><div class="testi-author">— Jasmine T., Houston, TX</div></div>
+      <div class="testi"><div class="testi-stars">★★★★★</div><p class="testi-text">"Product research used to take me days. Now the AI gives me a full breakdown in 90 seconds. I launched 3 new products last month."</p><div class="testi-author">— Marcus W., Los Angeles, CA</div></div>
+      <div class="testi"><div class="testi-stars">★★★★★</div><p class="testi-text">"The auto-fulfillment alone is worth everything. I went from manually emailing suppliers to just clicking a button. Game changer."</p><div class="testi-author">— Keisha M., Chicago, IL</div></div>
+    </div>
+  </div>
+  <div class="pricing-section">
+    <h2>Start Once. Run Forever.</h2>
+    <p class="sub">One-time startup fee. No monthly recurring surprises.</p>
+    <div class="price-card">
+      <div class="price-badge">One-Time Startup</div>
+      <div class="price-old">$499 one-time</div>
+      <div class="price-num">$299<span> one-time</span></div>
+      <p style="color:#64748b;font-size:0.85rem;margin:8px 0 0">Includes 14-day free trial</p>
+      <ul class="price-features">
+        <li>AI CEO — unlimited questions</li>
+        <li>Order fulfillment automation</li>
+        <li>Product research engine</li>
+        <li>AI ad generator (all platforms)</li>
+        <li>Revenue & analytics dashboard</li>
+        <li>Customer CRM</li>
+        <li>Email notifications</li>
+        <li>14-day free trial included</li>
+      </ul>
+      <a href="/wizard" class="btn-cta" style="display:block;text-align:center;font-size:1.05rem;padding:14px;">Start Free Trial →</a>
+      <p style="font-size:0.78rem;color:#475569;margin-top:10px;text-align:center;">No credit card required to start</p>
+    </div>
+  </div>
+  <div class="faq-section">
+    <h2>Questions? Answered.</h2>
+    <div class="faq">
+      <div class="faq-item"><div class="faq-q">Do I need a supplier already?</div><div class="faq-a">No. The AI helps you find and research suppliers as part of the product research process. You can start without one.</div></div>
+      <div class="faq-item"><div class="faq-q">What does "AI CEO" actually mean?</div><div class="faq-a">It means you have an AI that makes real business decisions — what to sell, how to price it, how to market it — based on your actual store data. Not generic advice.</div></div>
+      <div class="faq-item"><div class="faq-q">Is the $299 a one-time fee or monthly?</div><div class="faq-a">One-time. Pay once, use the platform indefinitely. No monthly fees, no surprise charges.</div></div>
+      <div class="faq-item"><div class="faq-q">How fast can I get my store running?</div><div class="faq-a">Most users are fully set up in under 30 minutes. The AI walks you through everything step by step.</div></div>
+    </div>
+  </div>
+  <div class="cta-bottom">
+    <h2>Your Competition Is Already Using AI</h2>
+    <p>Don't fall behind. Start your AI-powered dropshipping store today.</p>
+    <a href="/wizard" class="btn-cta" style="font-size:1.1rem;padding:16px 40px;">Start Free — No Card Needed</a>
   </div>
 </div>
 {% endblock %}

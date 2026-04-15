@@ -120,6 +120,7 @@
 
 <!-- ── AI Assistant Panel (OpenRouter) ── -->
 <style>
+{% raw %}
   #aiFloatBtn{position:fixed;bottom:1.5rem;right:1.5rem;z-index:8000;background:#7c3aed;color:white;border:none;width:52px;height:52px;border-radius:50%;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 16px rgba(124,58,237,0.5);display:flex;align-items:center;justify-content:center;transition:transform 0.15s;}
   #aiFloatBtn:hover{transform:scale(1.1);}
   #aiPanel{position:fixed;bottom:5rem;right:1.5rem;z-index:8001;width:350px;background:#0f172a;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:none;flex-direction:column;overflow:hidden;border:1px solid #1e293b;}
@@ -139,6 +140,7 @@
   #aiImgPreview{display:none;padding:0.4rem 0.75rem;border-top:1px solid #1e293b;font-size:0.78rem;color:#10b981;align-items:center;gap:0.5rem;}
   #aiImgPreview button{background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.9rem;padding:0;}
   @media(max-width:400px){#aiPanel{width:calc(100vw - 2rem);right:1rem;}}
+{% endraw %}
 </style>
 <button id="aiFloatBtn" onclick="aiToggle()" title="AI CEO Assistant">&#x1F916;</button>
 <input type="file" id="aiFileInput" accept="image/*" style="display:none" onchange="aiHandleImage(this)">

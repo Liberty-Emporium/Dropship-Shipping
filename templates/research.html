@@ -1,52 +1,267 @@
 {% extends "base.html" %}
 {% block title %}Product Research{% endblock %}
 {% block content %}
-<h2><i class="bi bi-search"></i> Product Research</h2>
 
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header"><h5 class="mb-0">🔍 Analyze a Niche</h5></div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label">Product/Niche</label>
-                    <input type="text" id="research-niche" class="form-control" placeholder="e.g., Pet Supplies, Yoga Mats, Phone Cases">
-                </div>
-                <button onclick="researchNiche()" class="btn btn-primary">Analyze</button>
-                <div id="research-result" class="mt-3"></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header"><h5 class="mb-0">🔥 Trending Niches</h5></div>
-            <div class="card-body">
-                <button onclick="loadTrending()" class="btn btn-warning mb-3">Load Trending</button>
-                <div id="trending-result"></div>
-            </div>
-        </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="mb-0"><i class="bi bi-search"></i> Product Research</h2>
+    <p class="text-muted mb-0 mt-1">Find products to sell — AI sources real wholesale deals you can add instantly</p>
+  </div>
 </div>
+
+<!-- Search Bar -->
+<div class="card mb-4">
+  <div class="card-body p-4">
+    <div class="d-flex gap-3 align-items-end">
+      <div style="flex:1;">
+        <label class="form-label fw-bold">What do you want to sell?</label>
+        <input type="text" id="research-niche" class="form-control form-control-lg"
+               placeholder="e.g. Nike shoes, wireless earbuds, yoga mats, phone cases...">
+      </div>
+      <button onclick="findProducts()" id="findBtn" class="btn btn-primary btn-lg px-4">
+        <i class="bi bi-search-heart"></i> Find Products
+      </button>
+      <button onclick="researchNiche()" id="analyzeBtn" class="btn btn-outline-secondary btn-lg px-3">
+        <i class="bi bi-graph-up"></i> Analyze
+      </button>
+    </div>
+    <div class="mt-3 d-flex gap-2 flex-wrap">
+      <span class="badge bg-light text-dark border px-3 py-2" style="cursor:pointer" onclick="qs('Nike shoes')">👟 Nike shoes</span>
+      <span class="badge bg-light text-dark border px-3 py-2" style="cursor:pointer" onclick="qs('wireless earbuds')">🎧 Earbuds</span>
+      <span class="badge bg-light text-dark border px-3 py-2" style="cursor:pointer" onclick="qs('phone cases')">📱 Phone cases</span>
+      <span class="badge bg-light text-dark border px-3 py-2" style="cursor:pointer" onclick="qs('yoga mats')">🧘 Yoga mats</span>
+      <span class="badge bg-light text-dark border px-3 py-2" style="cursor:pointer" onclick="qs('LED strip lights')">💡 LED lights</span>
+      <span class="badge bg-light text-dark border px-3 py-2" style="cursor:pointer" onclick="qs('pet accessories')">🐾 Pet gear</span>
+      <span class="badge bg-light text-dark border px-3 py-2" style="cursor:pointer" onclick="qs('kitchen gadgets')">🍳 Kitchen</span>
+      <span class="badge bg-light text-dark border px-3 py-2" style="cursor:pointer" onclick="qs('fitness equipment')">💪 Fitness</span>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div id="loadingBlock" style="display:none;" class="text-center py-5">
+  <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem;"></div>
+  <h5 id="loadingMsg">🔍 Searching AliExpress, DHgate, Alibaba...</h5>
+  <p class="text-muted">Finding the best wholesale deals for you</p>
+</div>
+
+<!-- Product Results -->
+<div id="productsBlock" style="display:none;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 id="productsTitle" class="mb-0"></h5>
+    <button onclick="addAllNow()" class="btn btn-success">
+      <i class="bi bi-plus-circle"></i> Add All to Products
+    </button>
+  </div>
+
+  <!-- Suppliers -->
+  <div class="row mb-3" id="suppliersRow"></div>
+
+  <!-- Product Cards -->
+  <div class="row g-3" id="productsGrid"></div>
+
+  <!-- Summary -->
+  <div id="summaryCard" class="card mt-4 border-0" style="background:linear-gradient(135deg,#1e1b4b,#312e81);color:white;display:none;">
+    <div class="card-body">
+      <h6><i class="bi bi-robot"></i> AI Market Analysis</h6>
+      <p id="summaryText" class="mb-0" style="font-size:0.9rem;opacity:0.9;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Niche Analysis Results (text) -->
+<div id="analysisBlock" style="display:none;">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-graph-up"></i> Niche Analysis</h5>
+      <button onclick="findProducts()" class="btn btn-success btn-sm">
+        <i class="bi bi-search-heart"></i> Now Find Products to Sell
+      </button>
+    </div>
+    <div class="card-body">
+      <div id="research-result"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Trending Niches -->
+<div class="card mt-4" id="trendingCard">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">🔥 Trending Niches</h5>
+    <button onclick="loadTrending()" class="btn btn-warning btn-sm">Load Trending</button>
+  </div>
+  <div class="card-body">
+    <div id="trending-result"><p class="text-muted">Click "Load Trending" to see what's hot right now.</p></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:2rem;right:2rem;z-index:9999;display:none;">
+  <div class="alert mb-0 shadow-lg" id="toastMsg" style="min-width:260px;"></div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 {% raw %}
-function researchNiche() {
-    document.getElementById('research-result').innerHTML = '<p>Analyzing...</p>';
-    fetch('/api/research-product', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({niche: document.getElementById('research-niche').value})
-    }).then(r => r.json()).then(data => {
-        document.getElementById('research-result').innerHTML = '<pre class="bg-light p-3">' + data.analysis + '</pre>';
-    });
+var sourced = null;
+
+function qs(term) {
+  document.getElementById('research-niche').value = term;
+  findProducts();
 }
-function loadTrending() {
-    document.getElementById('trending-result').innerHTML = '<p>Loading...</p>';
-    fetch('/api/trending-niches').then(r => r.json()).then(data => {
-        document.getElementById('trending-result').innerHTML = '<pre class="bg-light p-3">' + data.niches + '</pre>';
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  var tm = document.getElementById('toastMsg');
+  tm.className = 'alert alert-' + type + ' mb-0 shadow-lg';
+  tm.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(function(){ t.style.display = 'none'; }, 4000);
+}
+
+async function findProducts() {
+  var niche = document.getElementById('research-niche').value.trim();
+  if (!niche) { showToast('Enter what you want to sell!', 'warning'); return; }
+
+  document.getElementById('loadingBlock').style.display = 'block';
+  document.getElementById('productsBlock').style.display = 'none';
+  document.getElementById('analysisBlock').style.display = 'none';
+  document.getElementById('findBtn').disabled = true;
+
+  var msgs = ['🔍 Searching AliExpress, DHgate, Alibaba...','💰 Analyzing wholesale prices...','📦 Calculating profit margins...','✅ Compiling your results...'];
+  var idx = 0;
+  var interval = setInterval(function(){
+    if (idx < msgs.length) document.getElementById('loadingMsg').textContent = msgs[idx++];
+  }, 2000);
+
+  try {
+    var resp = await fetch('/api/source-products', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({niche: niche})
     });
+    var data = await resp.json();
+    clearInterval(interval);
+    document.getElementById('loadingBlock').style.display = 'none';
+    document.getElementById('findBtn').disabled = false;
+    if (data.error) { showToast(data.error, 'danger'); return; }
+    sourced = data;
+    renderProducts(data, niche);
+  } catch(e) {
+    clearInterval(interval);
+    document.getElementById('loadingBlock').style.display = 'none';
+    document.getElementById('findBtn').disabled = false;
+    showToast('Error: ' + e, 'danger');
+  }
+}
+
+function renderProducts(data, niche) {
+  document.getElementById('productsBlock').style.display = 'block';
+  document.getElementById('productsTitle').innerHTML = '<i class="bi bi-check-circle text-success"></i> Found <strong>' + data.products.length + ' products</strong> for "' + niche + '"';
+
+  // Suppliers
+  var sr = document.getElementById('suppliersRow');
+  sr.innerHTML = '';
+  (data.suppliers || []).forEach(function(s) {
+    sr.innerHTML += '<div class="col-md-4 mb-2"><div class="card border-0 shadow-sm h-100"><div class="card-body py-3">' +
+      '<div class="d-flex align-items-center gap-2 mb-1"><span style="font-size:1.4rem;">🏭</span><div>' +
+      '<div class="fw-bold" style="font-size:0.9rem;">' + s.name + '</div>' +
+      '<div style="font-size:0.72rem;color:#64748b;">' + (s.platform||'Wholesale') + '</div></div></div>' +
+      '<div class="d-flex gap-1 flex-wrap mt-1">' +
+      (s.min_order ? '<span class="badge bg-light text-dark border" style="font-size:0.7rem;">MOQ: ' + s.min_order + '</span>' : '') +
+      (s.shipping ? '<span class="badge bg-light text-dark border" style="font-size:0.7rem;">🚚 ' + s.shipping + '</span>' : '') +
+      (s.rating ? '<span class="badge bg-warning text-dark" style="font-size:0.7rem;">⭐ ' + s.rating + '</span>' : '') +
+      '</div>' +
+      (s.website ? '<a href="' + s.website + '" target="_blank" class="btn btn-outline-primary btn-sm mt-2 w-100" style="font-size:0.75rem;"><i class="bi bi-box-arrow-up-right"></i> Visit Supplier</a>' : '') +
+      '</div></div></div>';
+  });
+
+  // Products
+  var grid = document.getElementById('productsGrid');
+  grid.innerHTML = '';
+  data.products.forEach(function(p, i) {
+    var margin = (p.sell_price && p.cost) ? ((p.sell_price - p.cost) / p.sell_price * 100).toFixed(0) : 0;
+    var mc = margin >= 40 ? 'success' : margin >= 20 ? 'warning' : 'danger';
+    grid.innerHTML += '<div class="col-md-4"><div class="card h-100 shadow-sm"><div class="card-body">' +
+      '<div class="d-flex justify-content-between align-items-start mb-2">' +
+      '<h6 class="mb-0" style="font-size:0.92rem;font-weight:700;">' + p.name + '</h6>' +
+      '<span class="badge bg-' + mc + '">' + margin + '% margin</span></div>' +
+      '<p class="text-muted mb-2" style="font-size:0.78rem;">' + (p.description||'') + '</p>' +
+      '<div class="row g-2 mb-3">' +
+      '<div class="col-6"><div style="background:#f8fafc;border-radius:8px;padding:8px;text-align:center;">' +
+      '<div style="font-size:0.65rem;color:#64748b;text-transform:uppercase;">Buy At</div>' +
+      '<div style="font-size:1.1rem;font-weight:800;">$' + p.cost + '</div></div></div>' +
+      '<div class="col-6"><div style="background:#f0fdf4;border-radius:8px;padding:8px;text-align:center;">' +
+      '<div style="font-size:0.65rem;color:#16a34a;text-transform:uppercase;">Sell For</div>' +
+      '<div style="font-size:1.1rem;font-weight:800;color:#16a34a;">$' + p.sell_price + '</div></div></div></div>' +
+      '<div style="font-size:0.75rem;color:#64748b;" class="mb-3">📦 ' + (p.supplier||'Wholesale') + '<br>🚚 ' + (p.shipping_estimate||'7-14 days') + '</div>' +
+      '<div class="d-flex gap-2">' +
+      '<button onclick="addOne(' + i + ')" class="btn btn-success btn-sm flex-grow-1"><i class="bi bi-plus"></i> Add to Products</button>' +
+      '<button onclick="addSup(' + i + ')" class="btn btn-outline-secondary btn-sm" title="Add Supplier"><i class="bi bi-building"></i></button>' +
+      '</div></div></div></div>';
+  });
+
+  if (data.summary) {
+    document.getElementById('summaryText').textContent = data.summary;
+    document.getElementById('summaryCard').style.display = 'block';
+  }
+}
+
+async function addOne(idx) {
+  var p = sourced.products[idx];
+  var resp = await fetch('/api/source-products/add-product', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product: p})
+  });
+  var d = await resp.json();
+  if (d.success) showToast('✅ ' + p.name + ' added to Products!', 'success');
+  else showToast('Error: ' + d.error, 'danger');
+}
+
+async function addSup(idx) {
+  var p = sourced.products[idx];
+  var s = {name: p.supplier||'Supplier', website: p.supplier_url||'', description: 'Added from Research'};
+  var resp = await fetch('/api/source-products/add-supplier', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({supplier: s})
+  });
+  var d = await resp.json();
+  if (d.success) showToast('✅ Supplier added!', 'success');
+  else showToast('Error: ' + d.error, 'danger');
+}
+
+async function addAllNow() {
+  if (!sourced) return;
+  var resp = await fetch('/api/source-products/add-all', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({products: sourced.products, suppliers: sourced.suppliers})
+  });
+  var d = await resp.json();
+  if (d.success) showToast('✅ Added ' + d.products_added + ' products & ' + d.suppliers_added + ' suppliers!', 'success');
+  else showToast('Error: ' + d.error, 'danger');
+}
+
+function researchNiche() {
+  var niche = document.getElementById('research-niche').value.trim();
+  if (!niche) { showToast('Enter a niche to analyze!', 'warning'); return; }
+  document.getElementById('research-result').innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary"></div><p class="mt-2">Analyzing...</p></div>';
+  document.getElementById('analysisBlock').style.display = 'block';
+  document.getElementById('productsBlock').style.display = 'none';
+  fetch('/api/research-product', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({niche: niche})
+  }).then(function(r){ return r.json(); }).then(function(data){
+    document.getElementById('research-result').innerHTML = '<pre style="white-space:pre-wrap;font-size:0.85rem;background:#f8fafc;padding:1rem;border-radius:8px;">' + data.analysis + '</pre>';
+  });
+}
+
+function loadTrending() {
+  document.getElementById('trending-result').innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-warning"></div> Loading...</div>';
+  fetch('/api/trending-niches').then(function(r){ return r.json(); }).then(function(data){
+    document.getElementById('trending-result').innerHTML = '<pre style="white-space:pre-wrap;font-size:0.85rem;">' + data.niches + '</pre>';
+  });
 }
 {% endraw %}
 </script>

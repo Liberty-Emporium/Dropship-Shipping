@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% block title %}AI Product Sourcer | AI Auto Dropshipping{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-0"><i class="bi bi-search-heart"></i> AI Product Sourcer</h2>
+      <p class="text-muted mb-0 mt-1">Tell the AI what you want to sell — it finds real suppliers and deals for you</p>
+    </div>
+  </div>
+
+  <!-- Search Box -->
+  <div class="card mb-4">
+    <div class="card-body p-4">
+      <div class="d-flex gap-3 align-items-end">
+        <div style="flex:1;">
+          <label class="form-label fw-bold">What do you want to sell?</label>
+          <input type="text" id="nicheInput" class="form-control form-control-lg"
+                 placeholder="e.g. Nike shoes, wireless headphones, yoga mats, phone cases..."
+                 value="{{ last_query or '' }}">
+        </div>
+        <button onclick="runSourcer()" id="sourceBtn" class="btn btn-primary btn-lg px-4">
+          <i class="bi bi-search"></i> Find Deals
+        </button>
+      </div>
+      <div class="mt-3 d-flex gap-2 flex-wrap" id="quickTags">
+        <span class="badge bg-light text-dark border" style="cursor:pointer;padding:6px 12px;" onclick="quickSearch('Nike shoes')">👟 Nike shoes</span>
+        <span class="badge bg-light text-dark border" style="cursor:pointer;padding:6px 12px;" onclick="quickSearch('wireless headphones')">🎧 Headphones</span>
+        <span class="badge bg-light text-dark border" style="cursor:pointer;padding:6px 12px;" onclick="quickSearch('phone cases')">📱 Phone cases</span>
+        <span class="badge bg-light text-dark border" style="cursor:pointer;padding:6px 12px;" onclick="quickSearch('yoga mats')">🧘 Yoga mats</span>
+        <span class="badge bg-light text-dark border" style="cursor:pointer;padding:6px 12px;" onclick="quickSearch('led strip lights')">💡 LED lights</span>
+        <span class="badge bg-light text-dark border" style="cursor:pointer;padding:6px 12px;" onclick="quickSearch('pet accessories')">🐾 Pet gear</span>
+        <span class="badge bg-light text-dark border" style="cursor:pointer;padding:6px 12px;" onclick="quickSearch('kitchen gadgets')">🍳 Kitchen</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div id="loadingBlock" style="display:none;" class="text-center py-5">
+    <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem;"></div>
+    <h5 id="loadingMsg">🔍 Searching for deals...</h5>
+    <p class="text-muted" id="loadingSubMsg">AI is researching suppliers, prices, and profit margins</p>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsBlock" style="display:none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 id="resultsTitle" class="mb-0"></h5>
+      <div class="d-flex gap-2">
+        <button onclick="addAllProducts()" class="btn btn-success btn-sm">
+          <i class="bi bi-plus-circle"></i> Add All to Products
+        </button>
+        <button onclick="addAllSuppliers()" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-building-add"></i> Add All Suppliers
+        </button>
+      </div>
+    </div>
+
+    <!-- Supplier Overview -->
+    <div id="suppliersRow" class="row mb-4"></div>
+
+    <!-- Product Results -->
+    <div id="productsGrid" class="row g-3"></div>
+
+    <!-- AI Summary -->
+    <div id="summaryBlock" class="card mt-4 border-0" style="background:linear-gradient(135deg,#1e1b4b,#312e81);color:white;display:none;">
+      <div class="card-body">
+        <h6 class="mb-2"><i class="bi bi-robot"></i> AI Market Analysis</h6>
+        <p id="summaryText" class="mb-0" style="font-size:0.9rem;opacity:0.9;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" style="position:fixed;bottom:2rem;right:2rem;z-index:9999;display:none;">
+    <div class="alert mb-0 shadow-lg" id="toastInner" style="min-width:280px;"></div>
+  </div>
+
+</div>
+
+<script>
+{% raw %}
+var sourced_data = null;
+
+function quickSearch(term) {
+  document.getElementById('nicheInput').value = term;
+  runSourcer();
+}
+
+async function runSourcer() {
+  const niche = document.getElementById('nicheInput').value.trim();
+  if (!niche) { showToast('Enter what you want to sell first!', 'warning'); return; }
+
+  document.getElementById('loadingBlock').style.display = 'block';
+  document.getElementById('resultsBlock').style.display = 'none';
+  document.getElementById('sourceBtn').disabled = true;
+
+  const msgs = [
+    '🔍 Searching AliExpress, DHgate, Faire...',
+    '💰 Analyzing wholesale prices...',
+    '📦 Calculating profit margins...',
+    '🏷️ Checking supplier ratings...',
+    '✅ Compiling your results...'
+  ];
+  let idx = 0;
+  const interval = setInterval(() => {
+    if (idx < msgs.length) {
+      document.getElementById('loadingMsg').textContent = msgs[idx++];
+    }
+  }, 1800);
+
+  try {
+    const resp = await fetch('/api/source-products', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({niche: niche})
+    });
+    const data = await resp.json();
+    clearInterval(interval);
+    document.getElementById('loadingBlock').style.display = 'none';
+    document.getElementById('sourceBtn').disabled = false;
+
+    if (data.error) {
+      showToast(data.error, 'danger');
+      return;
+    }
+
+    sourced_data = data;
+    renderResults(data, niche);
+  } catch(e) {
+    clearInterval(interval);
+    document.getElementById('loadingBlock').style.display = 'none';
+    document.getElementById('sourceBtn').disabled = false;
+    showToast('Connection error. Try again.', 'danger');
+  }
+}
+
+function renderResults(data, niche) {
+  document.getElementById('resultsBlock').style.display = 'block';
+  document.getElementById('resultsTitle').innerHTML = '<i class="bi bi-check-circle text-success"></i> Found ' + data.products.length + ' products for <strong>' + niche + '</strong>';
+
+  // Render suppliers
+  const suppRow = document.getElementById('suppliersRow');
+  suppRow.innerHTML = '';
+  (data.suppliers || []).forEach(s => {
+    suppRow.innerHTML += `
+      <div class="col-md-4 mb-3">
+        <div class="card h-100 border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div style="width:40px;height:40px;background:#e0e7ff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">🏭</div>
+              <div>
+                <div class="fw-bold">${s.name}</div>
+                <div style="font-size:0.75rem;color:#64748b;">${s.platform || 'Wholesale'}</div>
+              </div>
+            </div>
+            <div style="font-size:0.82rem;color:#475569;">${s.description || ''}</div>
+            <div class="mt-2 d-flex gap-1 flex-wrap">
+              ${s.min_order ? '<span class="badge bg-light text-dark border">MOQ: ' + s.min_order + '</span>' : ''}
+              ${s.shipping ? '<span class="badge bg-light text-dark border">Ship: ' + s.shipping + '</span>' : ''}
+              ${s.rating ? '<span class="badge bg-warning text-dark">⭐ ' + s.rating + '</span>' : ''}
+            </div>
+            ${s.website ? '<a href="' + s.website + '" target="_blank" class="btn btn-outline-primary btn-sm mt-2 w-100"><i class="bi bi-box-arrow-up-right"></i> Visit Supplier</a>' : ''}
+          </div>
+        </div>
+      </div>`;
+  });
+
+  // Render products
+  const grid = document.getElementById('productsGrid');
+  grid.innerHTML = '';
+  data.products.forEach((p, idx) => {
+    const margin = p.sell_price && p.cost ? ((p.sell_price - p.cost) / p.sell_price * 100).toFixed(0) : 0;
+    const marginColor = margin >= 40 ? 'success' : margin >= 20 ? 'warning' : 'danger';
+    grid.innerHTML += `
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <h6 class="card-title mb-0" style="font-size:0.95rem;">${p.name}</h6>
+              <span class="badge bg-${marginColor}">${margin}% margin</span>
+            </div>
+            <p class="text-muted" style="font-size:0.8rem;">${p.description || ''}</p>
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div style="background:#f8fafc;border-radius:8px;padding:8px;text-align:center;">
+                  <div style="font-size:0.7rem;color:#64748b;text-transform:uppercase;">Buy At</div>
+                  <div style="font-size:1.1rem;font-weight:800;color:#0f172a;">$${p.cost}</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div style="background:#f0fdf4;border-radius:8px;padding:8px;text-align:center;">
+                  <div style="font-size:0.7rem;color:#16a34a;text-transform:uppercase;">Sell For</div>
+                  <div style="font-size:1.1rem;font-weight:800;color:#16a34a;">$${p.sell_price}</div>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:0.78rem;color:#64748b;" class="mb-3">
+              📦 Supplier: ${p.supplier || 'Wholesale'}<br>
+              🚚 ${p.shipping_estimate || 'Ships in 7-14 days'}
+            </div>
+            <div class="d-flex gap-2">
+              <button onclick="addProduct(${idx})" class="btn btn-success btn-sm flex-grow-1">
+                <i class="bi bi-plus"></i> Add Product
+              </button>
+              <button onclick="addSupplierFromProduct(${idx})" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-building"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  // AI summary
+  if (data.summary) {
+    document.getElementById('summaryText').textContent = data.summary;
+    document.getElementById('summaryBlock').style.display = 'block';
+  }
+}
+
+async function addProduct(idx) {
+  const p = sourced_data.products[idx];
+  const resp = await fetch('/api/source-products/add-product', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({product: p})
+  });
+  const d = await resp.json();
+  if (d.success) showToast('✅ ' + p.name + ' added to Products!', 'success');
+  else showToast('Error: ' + d.error, 'danger');
+}
+
+async function addSupplierFromProduct(idx) {
+  const p = sourced_data.products[idx];
+  const sup = {name: p.supplier || 'Wholesale Supplier', website: p.supplier_url || '', notes: 'Added via AI Sourcer'};
+  const resp = await fetch('/api/source-products/add-supplier', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({supplier: sup})
+  });
+  const d = await resp.json();
+  if (d.success) showToast('✅ Supplier added!', 'success');
+  else showToast('Error: ' + d.error, 'danger');
+}
+
+async function addAllProducts() {
+  if (!sourced_data) return;
+  const resp = await fetch('/api/source-products/add-all', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({products: sourced_data.products, suppliers: sourced_data.suppliers})
+  });
+  const d = await resp.json();
+  if (d.success) showToast('✅ Added ' + d.products_added + ' products and ' + d.suppliers_added + ' suppliers!', 'success');
+  else showToast('Error: ' + d.error, 'danger');
+}
+
+async function addAllSuppliers() {
+  if (!sourced_data || !sourced_data.suppliers) return;
+  let added = 0;
+  for (const s of sourced_data.suppliers) {
+    const resp = await fetch('/api/source-products/add-supplier', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({supplier: s})
+    });
+    const d = await resp.json();
+    if (d.success) added++;
+  }
+  showToast('✅ Added ' + added + ' suppliers!', 'success');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  const ti = document.getElementById('toastInner');
+  ti.className = 'alert alert-' + type + ' mb-0 shadow-lg';
+  ti.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+{% endraw %}
+</script>
+{% endblock %}

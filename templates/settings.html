@@ -16,14 +16,14 @@
       <div class="card-header"><strong>OpenRouter API Key</strong></div>
       <div class="card-body">
         <input type="password" name="openrouter_key" class="form-control mb-2"
-               value="{{ current_model and '' or '' }}" placeholder="sk-or-v1-...">
+               placeholder="sk-or-v1-... (leave blank to keep current key)">
         <small class="text-muted">
           Get a free key at <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>
         </small>
         {% if key_set %}
-          <div class="mt-2 text-success"><strong>Key is saved and active</strong></div>
+          <div class="mt-2 text-success"><strong>✅ Key active{% if current_key_preview %}: <code>{{ current_key_preview }}</code>{% endif %}</strong></div>
         {% else %}
-          <div class="mt-2 text-warning">No key set - AI features won't work</div>
+          <div class="mt-2 text-warning">⚠️ No key set — AI features won't work</div>
         {% endif %}
       </div>
     </div>

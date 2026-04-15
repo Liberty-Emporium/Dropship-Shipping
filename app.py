@@ -307,7 +307,7 @@ def _get_ai_key(slug=None):
         cfg = load_client_config(slug)
         key = cfg.get('openrouter_key','') or cfg.get('openrouter_api_key','')
         if key: return key
-    return get_config('openrouter_key','') or get_config('openrouter_api_key','') or OPENROUTER_API_KEY
+    return get_config('openrouter_key','') or get_config('openrouter_api_key','') or os.environ.get('OPENROUTER_API_KEY','')
 
 def _get_ai_model(slug=None):
     """Get AI model — checks both old and new config key names."""
@@ -786,9 +786,18 @@ def settings():
         flash('Settings saved!','success')
         return redirect(url_for('settings'))
     current_model = get_openrouter_model(slug)
-    key_set = bool(get_openrouter_key(slug) or get_groq_key(slug))
+    current_key = get_openrouter_key(slug)
+    key_set = bool(current_key or get_groq_key(slug))
+    # Build a masked preview so the user can confirm which key is active
+    if current_key and len(current_key) > 8:
+        current_key_preview = current_key[:8] + '...' + current_key[-4:]
+    elif current_key:
+        current_key_preview = '••••••••'
+    else:
+        current_key_preview = ''
     oc = {'gateway_url': '', 'token': '', 'agent': '', 'token_set': False}
-    return render_template('settings.html', current_model=current_model, key_set=key_set, oc=oc, **ctx())
+    return render_template('settings.html', current_model=current_model, key_set=key_set,
+                           current_key_preview=current_key_preview, oc=oc, **ctx())
 
 @app.route('/settings/email', methods=['GET','POST'])
 @login_required
@@ -1189,16 +1198,33 @@ Rules:
 - Be specific with real product names and prices
 - Return ONLY the JSON, no other text"""
 
-    try:
+    import re as _re
+
+    def _extract_json(text):
+        """Robustly extract a JSON object from AI response text."""
+        # Strip code fences
+        if '```json' in text:
+            text = text.split('```json')[1].split('```')[0].strip()
+        elif '```' in text:
+            text = text.split('```')[1].split('```')[0].strip()
+        else:
+            # Find the outermost JSON object in the response
+            match = _re.search(r'\{[\s\S]*\}', text)
+            if match:
+                text = match.group(0)
+        return text.strip()
+
+    def _call_ai(prompt_text):
+        """Make one OpenRouter call and return the content string."""
         import urllib.request as _ur
-        payload = json.dumps({
+        _payload = json.dumps({
             'model': model,
-            'messages': [{'role': 'user', 'content': prompt}],
+            'messages': [{'role': 'user', 'content': prompt_text}],
             'max_tokens': 2000
         }).encode()
-        req = _ur.Request(
+        _req = _ur.Request(
             'https://openrouter.ai/api/v1/chat/completions',
-            data=payload,
+            data=_payload,
             headers={
                 'Authorization': f'Bearer {key}',
                 'Content-Type': 'application/json',
@@ -1206,21 +1232,42 @@ Rules:
                 'X-Title': 'AI Auto Dropshipping'
             }
         )
-        with _ur.urlopen(req, timeout=45) as resp:
-            result = json.loads(resp.read())
-            text = result['choices'][0]['message']['content'].strip()
+        with _ur.urlopen(_req, timeout=45) as _resp:
+            _result = json.loads(_resp.read())
+            return _result['choices'][0]['message']['content'].strip()
 
-        # Extract JSON from response
-        if '```json' in text:
-            text = text.split('```json')[1].split('```')[0].strip()
-        elif '```' in text:
-            text = text.split('```')[1].split('```')[0].strip()
+    try:
+        text = _call_ai(prompt)
+        extracted = _extract_json(text)
 
-        sourced = json.loads(text)
+        try:
+            sourced = json.loads(extracted)
+        except json.JSONDecodeError:
+            # Retry once with an even stricter instruction
+            retry_prompt = (
+                "You MUST return ONLY valid JSON and nothing else. "
+                "No markdown, no explanation, no code fences. Just the raw JSON object.\n\n"
+                + prompt
+            )
+            text2 = _call_ai(retry_prompt)
+            extracted2 = _extract_json(text2)
+            try:
+                sourced = json.loads(extracted2)
+            except json.JSONDecodeError:
+                return jsonify({'error': 'AI returned invalid JSON after two attempts. Try switching to a different model in Settings.'}), 500
+
+        # Validate the response has the expected structure
+        if 'products' not in sourced:
+            sourced['products'] = []
+        if 'suppliers' not in sourced:
+            sourced['suppliers'] = []
+        if 'summary' not in sourced:
+            sourced['summary'] = ''
+
         return jsonify(sourced)
 
     except json.JSONDecodeError as e:
-        return jsonify({'error': f'AI returned invalid data. Try a different model in Settings.'}), 500
+        return jsonify({'error': 'AI returned invalid data. Try a different model in Settings.'}), 500
     except Exception as e:
         return jsonify({'error': f'Sourcing failed: {str(e)}'}), 500
 

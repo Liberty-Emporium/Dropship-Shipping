@@ -31,6 +31,7 @@
 
 {% block extra_js %}
 <script>
+{% raw %}
 function researchNiche() {
     document.getElementById('research-result').innerHTML = '<p>Analyzing...</p>';
     fetch('/api/research-product', {
@@ -47,5 +48,6 @@ function loadTrending() {
         document.getElementById('trending-result').innerHTML = '<pre class="bg-light p-3">' + data.niches + '</pre>';
     });
 }
+{% endraw %}
 </script>
 {% endblock %}

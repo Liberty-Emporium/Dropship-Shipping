@@ -46,6 +46,7 @@
 </div>
 
 <script>
+{% raw %}
 function createAd() {
     document.getElementById('ad-result').innerHTML = '<p>Generating...</p>';
     fetch('/api/create-ad', {
@@ -69,5 +70,6 @@ function createEmail() {
         document.getElementById('email-result').innerHTML = '<pre class="bg-light p-3">' + data.email + '</pre>';
     });
 }
+{% endraw %}
 </script>
 {% endblock %}

@@ -25,7 +25,7 @@ An AI CEO that runs the entire dropshipping business autonomously, making decisi
                       │
                       ▼
 ┌─────────────────────────────────────────────────────────┐
-│              Alexander AI Digital Backend                │
+│              Alexander AI Integrated Solutions Backend                │
 │  - Receives build requests                              │
 │  - Implements features                                  │
 │  - Reports back to API                                  │

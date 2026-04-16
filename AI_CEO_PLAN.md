@@ -1,7 +1,7 @@
 # AI CEO for Dropshipping Business
 
 ## Vision
-An AI CEO that runs the entire dropshipping business autonomously, making decisions about marketing, ads, product selection, and customer service. It communicates with Echo via API to request features, fixes, and improvements.
+An AI CEO that runs the entire dropshipping business autonomously, making decisions about marketing, ads, product selection, and customer service. It communicates with the AI backend via API to request features, fixes, and improvements.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ An AI CEO that runs the entire dropshipping business autonomously, making decisi
 │  - Makes business decisions                             │
 │  - Creates marketing strategies                         │
 │  - Analyzes data                                        │
-│  - Requests features from Echo                          │
+│  - Requests features via API                            │
 └─────────────────────┬───────────────────────────────────┘
                       │ API Calls
                       ▼
@@ -25,7 +25,7 @@ An AI CEO that runs the entire dropshipping business autonomously, making decisi
                       │
                       ▼
 ┌─────────────────────────────────────────────────────────┐
-│                    Echo (Me)                             │
+│              Alexander AI Digital Backend                │
 │  - Receives build requests                              │
 │  - Implements features                                  │
 │  - Reports back to API                                  │

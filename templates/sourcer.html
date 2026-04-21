@@ -112,7 +112,7 @@ async function runSourcer() {
 
   try {
     const resp = await fetch('/api/source-products', {
-      method: 'POST',
+      method: 'POST', credentials: 'include',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({niche: niche})
     });
@@ -223,7 +223,7 @@ function renderResults(data, niche) {
 async function addProduct(idx) {
   const p = sourced_data.products[idx];
   const resp = await fetch('/api/source-products/add-product', {
-    method: 'POST',
+    method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({product: p})
   });
@@ -236,7 +236,7 @@ async function addSupplierFromProduct(idx) {
   const p = sourced_data.products[idx];
   const sup = {name: p.supplier || 'Wholesale Supplier', website: p.supplier_url || '', notes: 'Added via AI Sourcer'};
   const resp = await fetch('/api/source-products/add-supplier', {
-    method: 'POST',
+    method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({supplier: sup})
   });
@@ -248,7 +248,7 @@ async function addSupplierFromProduct(idx) {
 async function addAllProducts() {
   if (!sourced_data) return;
   const resp = await fetch('/api/source-products/add-all', {
-    method: 'POST',
+    method: 'POST', credentials: 'include',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({products: sourced_data.products, suppliers: sourced_data.suppliers})
   });
@@ -262,7 +262,7 @@ async function addAllSuppliers() {
   let added = 0;
   for (const s of sourced_data.suppliers) {
     const resp = await fetch('/api/source-products/add-supplier', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
+      method: 'POST', credentials: 'include', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({supplier: s})
     });
     const d = await resp.json();

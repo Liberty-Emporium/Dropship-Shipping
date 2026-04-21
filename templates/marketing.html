@@ -50,7 +50,7 @@
 function createAd() {
     document.getElementById('ad-result').innerHTML = '<p>Generating...</p>';
     fetch('/api/create-ad', {
-        method: 'POST',
+        method: 'POST', credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
             product: document.getElementById('ad-product').value,
@@ -63,7 +63,7 @@ function createAd() {
 function createEmail() {
     document.getElementById('email-result').innerHTML = '<p>Generating...</p>';
     fetch('/api/create-email', {
-        method: 'POST',
+        method: 'POST', credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({type: document.getElementById('email-type').value})
     }).then(r => r.json()).then(data => {

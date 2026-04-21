@@ -154,7 +154,7 @@ function askDecision() {
     if (!situation) return;
     document.getElementById('ai-response').innerHTML = '<p>Thinking...</p>';
     fetch('/api/ceo/decide', {
-        method: 'POST',
+        method: 'POST', credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({situation})
     }).then(r => r.json()).then(data => {

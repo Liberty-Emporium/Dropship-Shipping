@@ -138,7 +138,7 @@ async function findProducts() {
 
   try {
     var resp = await fetch('/api/source-products', {
-      method: 'POST',
+      method: 'POST', credentials: 'include',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({niche: niche})
     });
@@ -212,7 +212,7 @@ function renderProducts(data, niche) {
 async function addOne(idx) {
   var p = sourced.products[idx];
   var resp = await fetch('/api/source-products/add-product', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({product: p})
   });
   var d = await resp.json();
@@ -224,7 +224,7 @@ async function addSup(idx) {
   var p = sourced.products[idx];
   var s = {name: p.supplier||'Supplier', website: p.supplier_url||'', description: 'Added from Research'};
   var resp = await fetch('/api/source-products/add-supplier', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({supplier: s})
   });
   var d = await resp.json();
@@ -235,7 +235,7 @@ async function addSup(idx) {
 async function addAllNow() {
   if (!sourced) return;
   var resp = await fetch('/api/source-products/add-all', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({products: sourced.products, suppliers: sourced.suppliers})
   });
   var d = await resp.json();
@@ -250,7 +250,7 @@ function researchNiche() {
   document.getElementById('analysisBlock').style.display = 'block';
   document.getElementById('productsBlock').style.display = 'none';
   fetch('/api/research-product', {
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', credentials: 'include', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({niche: niche})
   }).then(function(r){ return r.json(); }).then(function(data){
     document.getElementById('research-result').innerHTML = '<pre style="white-space:pre-wrap;font-size:0.85rem;background:#f8fafc;padding:1rem;border-radius:8px;">' + data.analysis + '</pre>';

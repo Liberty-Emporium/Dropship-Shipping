@@ -61,7 +61,7 @@
 function calculate() {
     const cost = document.getElementById('test-cost').value;
     fetch('/api/calculate-price', {
-        method: 'POST',
+        method: 'POST', credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({cost: parseFloat(cost)})
     }).then(r => r.json()).then(data => {

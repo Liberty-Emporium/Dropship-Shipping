@@ -41,7 +41,7 @@
 {% raw %}
 function calculate() {
     fetch('/api/calculate-profit', {
-        method: 'POST',
+        method: 'POST', credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
             product_cost: parseFloat(document.getElementById('product_cost').value || 0),

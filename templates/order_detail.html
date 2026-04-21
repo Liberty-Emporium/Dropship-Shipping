@@ -98,7 +98,7 @@
 function autoFulfill(orderId) {
     if (!confirm('Auto-fulfill this order? This will email the supplier and send tracking to customer.')) return;
     
-    fetch('/api/fulfill-auto/' + orderId, {method: 'POST'})
+    fetch('/api/fulfill-auto/' + orderId, {method: 'POST', credentials: 'include'})
     .then(r => r.json())
     .then(data => {
         if (data.success) {

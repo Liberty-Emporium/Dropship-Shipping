@@ -44,7 +44,7 @@ function calculateShipping() {
     const distance = parseFloat(document.getElementById('distance').value) || 0;
     
     fetch('/api/calculate-shipping', {
-        method: 'POST',
+        method: 'POST', credentials: 'include',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({weight, distance})
     })

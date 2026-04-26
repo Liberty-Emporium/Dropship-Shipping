@@ -50,6 +50,8 @@
   <div class="card">
     <h2>➕ Create Client Store</h2>
     <form method="POST" action="/overseer/client/create">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
       <div class="create-form">
         <input type="text" name="store_name" placeholder="Store Name" required>
         <input type="email" name="contact_email" placeholder="Contact Email" required>
@@ -85,12 +87,18 @@
         <td style="font-size:0.78rem;color:#94a3b8;">{{ s.created_at[:10] if s.created_at else '—' }}</td>
         <td>
           <form method="POST" action="/overseer/client/{{ s.slug }}/impersonate" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <button class="btn-sm btn-blue">Manage</button>
           </form>
           <form method="POST" action="/overseer/client/{{ s.slug }}/suspend" style="display:inline;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <button class="btn-sm btn-yellow">{{ 'Unsuspend' if s.status == 'suspended' else 'Suspend' }}</button>
           </form>
           <form method="POST" action="/overseer/client/{{ s.slug }}/delete" style="display:inline;" onsubmit="return confirm('Delete {{ s.store_name }}? Cannot be undone.')">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <button class="btn-sm btn-red">Delete</button>
           </form>
         </td>

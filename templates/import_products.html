@@ -10,6 +10,8 @@
         <h5>Upload CSV</h5>
         <p class="text-muted">CSV format: name, sku, cost, price, supplier</p>
         <form method="POST" enctype="multipart/form-data">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <div class="mb-3">
                 <input type="file" name="file" accept=".csv" class="form-control" required>
             </div>

@@ -10,6 +10,8 @@
             <div class="card-body">
                 <p class="text-muted">No credit card required to start.</p>
                 <form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
                     <div class="mb-3">
                         <label>Business Name</label>
                         <input type="text" name="business_name" class="form-control" required>

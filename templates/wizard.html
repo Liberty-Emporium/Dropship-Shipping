@@ -29,6 +29,8 @@
       <span class="perk">✅ Product research</span>
     </div>
     <form method="POST" action="/start-trial">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
       <div class="field">
         <label>Store Name</label>
         <input type="text" name="store_name" placeholder="e.g. TechDrop Store" required>

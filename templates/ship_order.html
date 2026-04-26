@@ -6,6 +6,8 @@
 <h2><i class="bi bi-truck"></i> Ship Order {{ order.id }}</h2>
 
 <form method="POST" class="card mt-4">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
     <div class="card-body">
         <div class="mb-3">
             <label class="form-label">Carrier *</label>

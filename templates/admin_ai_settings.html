@@ -30,6 +30,8 @@ select option { background: #1a1a2e; }
     {% endwith %}
     <div class="card">
         <form method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
             <div class="form-group">
                 <label>Active AI Provider</label>
                 <select name="active_provider">
